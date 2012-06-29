@@ -45,8 +45,8 @@ ENV_BUILD_TYPE = $$(BUILD_TYPE)
 # Prevent conflict with usage of "signal" in other libraries
 CONFIG += no_keywords
 
-CONFIG += link_pkgconfig
-PKGCONFIG = glib-2.0 gthread-2.0
+#CONFIG += link_pkgconfig
+#PKGCONFIG = glib-2.0 gthread-2.0
 
 QT = core gui declarative
 
@@ -670,7 +670,7 @@ QMAKE_CXXFLAGS += -DFIX_FOR_QT
 #-DNO_WEBKIT_INIT
 
 # Override the default (-Wall -W) from g++.conf mkspec (see linux-g++.conf)
-QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter -Wno-unused-variable -Wno-reorder -Wno-missing-field-initializers -Wno-extra
+QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter -Wno-unused-variable -Wno-reorder -Wno-missing-field-initializers -Wno-extra -Wno-strict-aliasing
 
 LIBS += -lcjson -lLunaSysMgrIpc -lLunaKeymaps -lWebKitLuna -llunaservice -lpbnjson_cpp -lhelpers
 
