@@ -116,15 +116,13 @@ void DashboardWebApp::attach(WebPage* page)
 			if(v.toBool()) {
 				prop.setDoubleHeightDash(true);
 				m_windowHeight = kDashboardWindowHeight * 2;
-				g_warning("Setting doubleheightdash=true");
 			} else if(v.type() == QVariant::String && stringIsTrue(v.toString().toStdString())) {
 				prop.setDoubleHeightDash(true);
 				m_windowHeight = kDashboardWindowHeight * 2;
-				g_warning("Setting doubleheightdash=true");
 			} else {
 				prop.setDoubleHeightDash(false);
-				g_warning("Setting doubleheightdash=false");
 			}
+			setWindowProperties(prop);
 		}
 	}
 }

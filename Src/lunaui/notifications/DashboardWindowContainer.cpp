@@ -564,7 +564,11 @@ void DashboardWindowContainer::resizeWindowsEventSync(int w)
 	for (int i = 0; i < m_items.size(); ++i) {
 		dw = m_items.at(i);
 		if (dw) {
-			dw->resizeEventSync(w, dw->initialHeight());
+			//dw->resizeEventSync(w, dw->initialHeight());
+			if(dw->isDoubleHeightDash())
+				dw->resizeEventSync(w, sDashboardWindowHeight * 2);
+			else
+				dw->resizeEventSync(w, sDashboardWindowHeight);
 			setPosTopLeft(dw, 0, 0);
 		}
 	}
@@ -723,7 +727,7 @@ void DashboardWindowContainer::slotDeleteAnimationFinished()
 	// Recalculate the scroll props
 	if(m_isMenu) {
 		if(0 != m_itemsDeleted) {
-			animateResize(m_contentWidth, (m_items.size() * sDashboardWindowHeight + (m_items.size()-1) * m_menuSeparatorHeight));
+			animateResize(m_contentWidth, calculateDashboardHeight(true));
 			if(m_itemsDeleted > 1) {
 				m_operation = MultipleWindowsRemoved;
 			}
@@ -952,9 +956,8 @@ void DashboardWindowContainer::restoreNonDeletedItems(bool recalcScrollBottom)
 }
 
 int DashboardWindowContainer::calculateDashboardHeight(bool incdel) {
-	int x;
 	int size = 0;
-	for(x = 0; x < m_items.size(); x++) {
+	for(int x = m_items.count() - 1; x >= 0; x--) {
 		if(incdel || !m_pendingDeleteItems.contains(m_items[x])) {
 			size += sDashboardWindowHeight;
 			if(m_items[x]->isDoubleHeightDash())
