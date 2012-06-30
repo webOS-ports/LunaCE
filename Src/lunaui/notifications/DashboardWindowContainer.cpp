@@ -528,6 +528,8 @@ void DashboardWindowContainer::layoutAllWindowsInMenu()
 		if (!m_pendingDeleteItems.contains(m_items[i])) {
 			m_items[i]->setPos(m_items[i]->boundingRect().width()/2, y);
 			y += sDashboardWindowHeight + m_menuSeparatorHeight;
+			if(m_items[i]->isDoubleHeightDash())
+				y += sDashboardWindowHeight;
 		}
 	}
 }
