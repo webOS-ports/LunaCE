@@ -487,7 +487,7 @@ QVariant DashboardWindowContainer::itemChange(GraphicsItemChange change, const Q
 
 				if(m_isMenu) {
 					if(m_itemsDeleted > 0) {
-						animateResize(m_contentWidth, (m_items.size() * sDashboardWindowHeight + (m_items.size()-1) * m_menuSeparatorHeight));
+						animateResize(m_contentWidth, calculateDashboardHeight(true));
 					}
 				}
 
@@ -552,6 +552,8 @@ void DashboardWindowContainer::setScrollBottom(int newBottom)
 		if (!m_pendingDeleteItems.contains(m_items[i])) {
 			m_items[i]->setPos(0, y);
 			y -= sDashboardWindowHeight;
+			if(m_items[i]->isDoubleHeightDash())
+				y -= sDashboardWindowHeight;
 		}
 	}
 }
@@ -580,13 +582,13 @@ QRectF DashboardWindowContainer::boundingRect() const
 	}
 }
 
+// I'm not certain entirely why, but accounting for double height windows in this function has an overall really terrible result. Maybe I'm doing it wrong.
 void DashboardWindowContainer::addWindow(DashboardWindow* win)
 {
 	if(!m_isMenu) {
 		win->resizeEventSync(SystemUiController::instance()->currentUiWidth(), sDashboardWindowHeight);
 	}
 	else {
-		// $$$ remove resize for menu
 		win->resizeEventSync(m_contentWidth, sDashboardWindowHeight);
 	}
 
@@ -599,7 +601,7 @@ void DashboardWindowContainer::addWindow(DashboardWindow* win)
 
 	// if we are running on a tablet, update the height
 	if(m_isMenu) {
-		animateResize(m_contentWidth, (m_items.size() * sDashboardWindowHeight + (m_items.size()-1) * m_menuSeparatorHeight));
+		animateResize(m_contentWidth, calculateDashboardHeight(true));
 		m_operation = SingleWindowAdded;
 	}
 
@@ -610,9 +612,9 @@ void DashboardWindowContainer::addWindow(DashboardWindow* win)
 	// Reset scroll bottom
 	m_scrollBottom = 0;
    	
-	if(!m_isMenu)
+	if(!m_isMenu) {
 		win->setPos(0, m_scrollBottom + sDashboardWindowHeight);
-	else {
+	} else {
 		win->setPos(win->boundingRect().width()/2, m_scrollBottom - sDashboardWindowHeight);
 	}
 
@@ -649,7 +651,7 @@ void DashboardWindowContainer::removeWindow(DashboardWindow* w)
 		Q_EMIT signalWindowsRemoved(w);
 
 		if(m_isMenu) {
-			animateResize(m_contentWidth, (m_items.size() * sDashboardWindowHeight + (m_items.size()-1) * m_menuSeparatorHeight));
+			animateResize(m_contentWidth, calculateDashboardHeight(true));
 			m_operation = SingleWindowRemoved;
 		}
 
@@ -830,6 +832,8 @@ void DashboardWindowContainer::animateWindowsToFinalDestination(int yCoOrd)
 		a->setEasingCurve(AS_CURVE(dashboardSnapCurve));
 		a->setDuration(AS(dashboardSnapDuration));
 		m_anim.addAnimation(a);
+		if(w->isDoubleHeightDash())
+			y -= sDashboardWindowHeight;
 		y -= sDashboardWindowHeight;
 	}
 
@@ -862,6 +866,8 @@ void DashboardWindowContainer::animateWindowsToFinalDestinationInMenu(int topCoo
 		a->setEasingCurve(AS_CURVE(dashboardSnapCurve));
 		a->setDuration(AS(dashboardSnapDuration));
 		m_anim.addAnimation(a);
+		if(w->isDoubleHeightDash())
+			y += sDashboardWindowHeight;
 		y += sDashboardWindowHeight + m_menuSeparatorHeight;
 	}
 
@@ -891,6 +897,8 @@ void DashboardWindowContainer::setWindowsToFinalDestinationInMenu(int topCoord)
 			continue;
 
 		w->setPos(QPointF(w->boundingRect().width()/2, y));
+		if(w->isDoubleHeightDash())
+			y += sDashboardWindowHeight;
 		y += sDashboardWindowHeight + m_menuSeparatorHeight;
 	}
 }
@@ -943,22 +951,29 @@ void DashboardWindowContainer::restoreNonDeletedItems(bool recalcScrollBottom)
 	}
 }
 
+int DashboardWindowContainer::calculateDashboardHeight(bool incdel) {
+	int x;
+	int size = 0;
+	for(x = 0; x < m_items.size(); x++) {
+		if(incdel || !m_pendingDeleteItems.contains(m_items[x])) {
+			size += sDashboardWindowHeight;
+			if(m_items[x]->isDoubleHeightDash())
+				size += sDashboardWindowHeight;
+		}
+	}
+	size += (m_items.size() - 1) * m_menuSeparatorHeight;
+	return size;
+}
+
+
 void DashboardWindowContainer::calculateScrollProperties()
 {
-	int actualDisplayHeight = 0;
-	int itemCount = 0;
-
 	if(m_isMenu) {
-
-		itemCount = m_items.size();
-
-		actualDisplayHeight = itemCount * DashboardWindowContainer::sDashboardWindowHeight  + (itemCount-1) * m_menuSeparatorHeight;
-
 		m_itemsDeleted = 0;
 		m_operation = Invalid;
 	}
 
-	m_contentsHeight = (m_items.size() * sDashboardWindowHeight + (m_items.size()-1) * m_menuSeparatorHeight);
+	m_contentsHeight = calculateDashboardHeight(true);
 
 	if (!m_items.isEmpty())
 		m_contentsHeight += m_DashboardTopPadding;

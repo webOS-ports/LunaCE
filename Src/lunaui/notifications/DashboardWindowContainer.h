@@ -142,6 +142,7 @@ private Q_SLOTS:
 private:
 
 	void initPixmaps();
+	int calculateDashboardHeight(bool incdel);
 	void calculateScrollProperties();
 	void restoreNonDeletedItems(bool recalcScrollBottom=true);
 	void showOrHideMasks();

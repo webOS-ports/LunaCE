@@ -112,14 +112,18 @@ void DashboardWebApp::attach(WebPage* page)
 	if (it != stageArgs.end()) {
 		QVariant v = it->second;
 		if(v.type() == QVariant::Bool) {
+			WindowProperties prop;
 			if(v.toBool()) {
-				WindowProperties prop;
 				prop.setDoubleHeightDash(true);
 				m_windowHeight = kDashboardWindowHeight * 2;
+				g_warning("Setting doubleheightdash=true");
 			} else if(v.type() == QVariant::String && stringIsTrue(v.toString().toStdString())) {
-				WindowProperties prop;
 				prop.setDoubleHeightDash(true);
 				m_windowHeight = kDashboardWindowHeight * 2;
+				g_warning("Setting doubleheightdash=true");
+			} else {
+				prop.setDoubleHeightDash(false);
+				g_warning("Setting doubleheightdash=false");
 			}
 		}
 	}
