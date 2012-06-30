@@ -1,4 +1,4 @@
-/* @@@LICENSE
+﻿/* @@@LICENSE
 *
 *      Copyright (c) 2008-2012 Hewlett-Packard Development Company, L.P.
 *
@@ -229,6 +229,10 @@ bool SystemUiController::handleEvent(QEvent *event)
 	case QEvent::MouseButtonPress:
 	case QEvent::MouseButtonRelease:
 		return handleMouseEvent(static_cast<QMouseEvent*>(event));
+	case QEvent::TouchBegin:
+	case QEvent::TouchUpdate:
+	case QEvent::TouchEnd:
+		return handleTouchEvent(static_cast<QTouchEvent*>(event));
 	case QEvent::Gesture:
 		return handleGestureEvent (static_cast<QGestureEvent*>(event));
     case orientationEventType:
@@ -243,6 +247,115 @@ bool SystemUiController::handleEvent(QEvent *event)
 
 bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 {
+	return false;
+}
+
+bool SystemUiController::handleTouchEvent(QTouchEvent *event)
+{
+	//TODO: Check drag angle, shouldn't be able to trigger it with a perpendicular drag
+	//TODO: Increase border size when the keyboard is visible
+	//FIXME: Drag event propagates to card view, sometimes causes erroneous upswipes
+
+	int borderSize = 25;
+	static bool dragFired = false;
+
+	const int INVALID_COORD = 0xFFFFFFFF;
+	int xDown = INVALID_COORD;
+	int yDown = INVALID_COORD;
+	int xCurr = INVALID_COORD;
+	int yCurr = INVALID_COORD;
+
+	xDown = (int)event->touchPoints()[0].startPos().x();
+	yDown = (int)event->touchPoints()[0].startPos().y();
+	xCurr = (int)event->touchPoints()[0].pos().x();
+	yCurr = (int)event->touchPoints()[0].pos().y();
+
+	if (event->type() == QEvent::TouchEnd) {
+		dragFired = false;
+		return false;
+	}
+
+	//Transform coordinates to match the screen orientation
+	switch (WindowServer::instance()->getUiOrientation())
+	{
+		case OrientationEvent::Orientation_Up: //Speakers Down
+			//Do nothing
+			break;
+		case OrientationEvent::Orientation_Down: //Speakers Up
+			xDown = m_uiWidth - xDown;
+			yDown = m_uiHeight - yDown;
+			xCurr = m_uiWidth - xCurr;
+			yCurr = m_uiHeight - yCurr;
+			break;
+		case OrientationEvent::Orientation_Left: //Speakers Right
+		{
+			int temp = (m_uiHeight-1) - xDown;
+			xDown = yDown;
+			yDown = temp;
+
+			temp = (m_uiHeight-1) - xCurr;
+			xCurr = yCurr;
+			yCurr = temp;
+			break;
+		}
+		case OrientationEvent::Orientation_Right: //Speakers Left
+		{
+			int temp = xDown;
+			xDown = (m_uiWidth-1) - yDown;
+			yDown = temp;
+
+			temp = xCurr;
+			xCurr = (m_uiWidth-1) - yCurr;
+			yCurr = temp;
+			break;
+		}
+		default:
+			g_warning("Unknown UI orientation");
+			return false;
+	}
+
+	// enforce a larger minimum Y distance for the flick gesture when the keyboard is up
+	if(IMEController::instance()->isIMEOpened())
+		borderSize = kFlickMinimumYLengthWithKeyboardUp;
+
+	if (xDown > borderSize
+	    && xDown < m_uiWidth - borderSize
+	    && yDown > borderSize
+	    && yDown < m_uiHeight - borderSize) {
+		return false;
+	}
+
+	if (xDown != INVALID_COORD
+	&& yDown != INVALID_COORD
+	&& xCurr != INVALID_COORD
+	&& yCurr != INVALID_COORD
+	&& !dragFired) {
+		if (yDown > m_uiHeight - borderSize && yCurr <= m_uiHeight - borderSize) {
+			//Drag-in from bottom fired
+			handleUpDrag();
+			dragFired = true;
+			return true;
+		}
+		if (yDown < borderSize && yCurr >= borderSize) {
+			//Drag-in from top fired
+			handleDownDrag();
+			dragFired = true;
+			return true;
+		}
+		if (xDown < borderSize && xCurr >= borderSize) {
+			//Drag-in from left fired
+			handleSideDrag(true);
+			dragFired = true;
+			return true;
+		}
+		if (xDown > m_uiWidth - borderSize && xCurr <= m_uiWidth - borderSize) {
+			//Drag-in from right fired
+			handleSideDrag(false);
+			dragFired = true;
+			return true;
+		}
+	}
+
 	return false;
 }
 
@@ -265,9 +378,7 @@ bool SystemUiController::handleGestureEvent (QGestureEvent* event)
 
 	if (!t) {
 		if (Settings::LunaSettings()->uiType != Settings::UI_MINIMAL && !m_emergencyMode) {
-			t = event->gesture((Qt::GestureType) SysMgrGestureScreenEdgeFlick);
-			if (t)
-				handleScreenEdgeFlickGesture(t);
+			//Non-tap gesture detection
 		}
 	}
 	
@@ -2036,46 +2147,9 @@ std::string SystemUiController::getMenuTitleForMaximizedWindow(Window* win)
 	return name;
 }
 
-void SystemUiController::handleScreenEdgeFlickGesture(QGesture* gesture)
-{
-	ScreenEdgeFlickGesture* g = static_cast<ScreenEdgeFlickGesture*>(gesture);
-	if (g->state() != Qt::GestureFinished)
-		return;
 
-    OrientationEvent::Orientation orientation = WindowServer::instance()->getUiOrientation();
-	switch (orientation) {
-    case OrientationEvent::Orientation_Up: {
-		if (g->edge() != ScreenEdgeFlickGesture::EdgeBottom)
-			return;
-		break;
-	}
-    case OrientationEvent::Orientation_Down: {
-		if (g->edge() != ScreenEdgeFlickGesture::EdgeTop)
-			return;
-		break;
-	}
-    case OrientationEvent::Orientation_Left: {
-		if (g->edge() != ScreenEdgeFlickGesture::EdgeLeft)
-			return;
-		break;
-	}
-    case OrientationEvent::Orientation_Right: {
-		if (g->edge() != ScreenEdgeFlickGesture::EdgeRight)
-			return;
-		break;
-	}
-	default: {
-		g_warning("Unknown UI orientation");
-		return;
-	}
-	}
-	
-	// enforce a larger minimum Y distance for the flick gesture when the keyboard is up
-	if(IMEController::instance()->isIMEOpened()) {
-		if(g->yDistance() < kFlickMinimumYLengthWithKeyboardUp)
-			return; // not long enough, so ignore it
-	}
 
+void SystemUiController::handleUpDrag() {
 	if (m_inDockMode) {
 		enterOrExitDockModeUi(false);
 		return;
@@ -2110,6 +2184,44 @@ void SystemUiController::handleScreenEdgeFlickGesture(QGesture* gesture)
 		return;
 	}
 
-	Q_EMIT signalToggleLauncher();					
+	Q_EMIT signalToggleLauncher();	
 }
 
+void SystemUiController::handleDownDrag() {
+	if (m_deviceLocked)
+		return;
+
+	if (m_dashboardOpened) {
+		Q_EMIT signalCloseDashboard(true);
+	}
+
+	if (m_menuVisible) {
+		Q_EMIT signalHideMenu();
+	}
+		
+	if (m_launcherShown) {
+		Q_EMIT signalHideLauncher();
+	}
+
+	if (m_universalSearchShown) {
+		Q_EMIT signalHideUniversalSearch(false, false);
+		return;
+	}
+
+	Q_EMIT signalShowUniversalSearch();
+}
+
+void SystemUiController::handleSideDrag(bool next) {
+	if (m_deviceLocked)
+		return;
+
+	if (m_dashboardOpened) {
+		Q_EMIT signalCloseDashboard(true);
+	}
+
+	if (m_menuVisible) {
+		Q_EMIT signalHideMenu();
+	}
+
+	Q_EMIT signalChangeCardWindow(next);
+}

@@ -1,4 +1,4 @@
-/* @@@LICENSE
+﻿/* @@@LICENSE
 *
 *      Copyright (c) 2008-2012 Hewlett-Packard Development Company, L.P.
 *
@@ -64,6 +64,7 @@ public:
     bool handleEvent(QEvent *event);
     bool handleKeyEvent(QKeyEvent *event);
     bool handleMouseEvent(QMouseEvent *event);
+    bool handleTouchEvent(QTouchEvent *event);
     bool handleGestureEvent(QGestureEvent *event);
     bool handleCustomEvent(QEvent *event);
 
@@ -401,7 +402,9 @@ private:
 	void animValueChanged(const QVariant& value);
 	bool allowSuspend();
 	void setSuspended(bool);
-	void handleScreenEdgeFlickGesture(QGesture* gesture);
+	void handleUpDrag();
+	void handleDownDrag();
+	void handleSideDrag(bool next);
 
 	Window* m_parentOfModalWindow;
 	Window* m_activeCardWindow;
