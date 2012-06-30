@@ -54,6 +54,7 @@ public:
 
 	bool isManualDragWindow() { return m_manualDragMode; }
 	virtual void inputEvent(Event* e);
+	bool isDoubleHeightDash() { return m_doubleHeightDash; }
 
 private:
 
@@ -64,6 +65,7 @@ private:
 	bool m_persistent;
 
 	bool m_manualDragMode;
+	bool m_doubleHeightDash;
 };	
 
 #endif /* DASHBOARDWINDOW_H */

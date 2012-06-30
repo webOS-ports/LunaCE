@@ -189,6 +189,7 @@ struct WindowProperties {
 		isSetGyro					 = 1 << 14,
 		isSetActiveTouchpanel       = 1 << 15,
 		isSetAlsDisabled       = 1 << 16,
+		isDoubleHeight				= 1 << 17,
 		isSetLast
     };
 
@@ -218,6 +219,7 @@ struct WindowProperties {
 	bool	allowResizeOnPositiveSpaceChange;
 	bool 	gyroEnabled;
 	bool 	compassEnabled;
+	bool	doubleHeightDash;
 
     WindowProperties()
 		: flags(0)
@@ -258,6 +260,7 @@ struct WindowProperties {
 	void setAllowResizeOnPositiveSpaceChange(bool allow) { flags |= isSetAllowResizeOnPositiveSpaceChange; allowResizeOnPositiveSpaceChange = allow; }
 	void setAllowGyroEvents(bool allow) { flags |= isSetGyro; gyroEnabled = allow; }
 	void setCompassEvents(bool enable) { flags |= isSetEnableCompassEvents; compassEnabled = enable; }
+	void setDoubleHeightDash(bool isDouble) { flags |= isDoubleHeight; doubleHeightDash = true; }
 };
 
 #endif /* WINDOW_H */

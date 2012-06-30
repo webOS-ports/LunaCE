@@ -106,6 +106,7 @@ void DashboardWindow::setWindowProperties(const WindowProperties& props)
 {
 	// we only care about the manual drag mode for Dashboard windows
 	m_manualDragMode = props.dashboardManualDrag;
+	m_doubleHeightDash = props.doubleHeightDash;
 }
 
 void DashboardWindow::inputEvent(Event* e)
