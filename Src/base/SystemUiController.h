@@ -403,7 +403,6 @@ private:
 	bool allowSuspend();
 	void setSuspended(bool);
 	void handleUpDrag();
-	void handleDownDrag();
 	void handleSideDrag(bool next);
 
 	Window* m_parentOfModalWindow;

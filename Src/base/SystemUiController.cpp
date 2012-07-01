@@ -253,7 +253,7 @@ bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 {
 	//FIXME: Drag event propagates to card view, sometimes causes erroneous upswipes
-	//TODO: Outswipes
+	//TODO: Outswipes?
 
 	const int borderSize = 25;
 	int triggerDistance = 15;
@@ -346,15 +346,6 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 			}
 			//Drag-in from bottom fired
 			handleUpDrag();
-			dragFired = true;
-			return true;
-		}
-		if (yDown < borderSize
-		&& abs(yDown - yCurr) >= triggerDistance
-		&& abs(yDown - yCurr) < cutoffDistance
-		&& abs(yDown - yCurr) * angleFactor > abs(xDown - xCurr)) {
-			//Drag-in from top fired
-			handleDownDrag();
 			dragFired = true;
 			return true;
 		}
@@ -2207,30 +2198,6 @@ void SystemUiController::handleUpDrag() {
 	}
 
 	Q_EMIT signalToggleLauncher();	
-}
-
-void SystemUiController::handleDownDrag() {
-	if (m_deviceLocked)
-		return;
-
-	if (m_dashboardOpened) {
-		Q_EMIT signalCloseDashboard(true);
-	}
-
-	if (m_menuVisible) {
-		Q_EMIT signalHideMenu();
-	}
-		
-	if (m_launcherShown) {
-		Q_EMIT signalHideLauncher();
-	}
-
-	if (m_universalSearchShown) {
-		Q_EMIT signalHideUniversalSearch(false, false);
-		return;
-	}
-
-	Q_EMIT signalShowUniversalSearch();
 }
 
 void SystemUiController::handleSideDrag(bool next) {
