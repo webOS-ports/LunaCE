@@ -252,11 +252,13 @@ bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 
 bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 {
-	//TODO: Check drag angle, shouldn't be able to trigger it with a perpendicular drag
-	//TODO: Increase border size when the keyboard is visible
+	//FIXME: Gestures are still triggered if xCurr strays into the 'accepted zone' regardless of distance. Cutoff?
 	//FIXME: Drag event propagates to card view, sometimes causes erroneous upswipes
+	//TODO: Outswipes
 
-	int borderSize = 25;
+	const int borderSize = 25;
+	int triggerDistance = 25;
+	const qreal angleFactor = 0.8;
 	static bool dragFired = false;
 
 	const int INVALID_COORD = 0xFFFFFFFF;
@@ -282,10 +284,10 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 			//Do nothing
 			break;
 		case OrientationEvent::Orientation_Down: //Speakers Up
-			xDown = m_uiWidth - xDown;
-			yDown = m_uiHeight - yDown;
-			xCurr = m_uiWidth - xCurr;
-			yCurr = m_uiHeight - yCurr;
+			xDown = (m_uiWidth-1) - xDown;
+			yDown = (m_uiHeight-1) - yDown;
+			xCurr = (m_uiWidth-1) - xCurr;
+			yCurr = (m_uiHeight-1) - yCurr;
 			break;
 		case OrientationEvent::Orientation_Left: //Speakers Right
 		{
@@ -314,14 +316,14 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 			return false;
 	}
 
-	// enforce a larger minimum Y distance for the flick gesture when the keyboard is up
+	// enforce a larger minimum Y distance for the drag gesture when the keyboard is up
 	if(IMEController::instance()->isIMEOpened())
-		borderSize = kFlickMinimumYLengthWithKeyboardUp;
+		triggerDistance = kFlickMinimumYLengthWithKeyboardUp;
 
 	if (xDown > borderSize
-	    && xDown < m_uiWidth - borderSize
+	    && xDown < (m_uiWidth-1) - borderSize
 	    && yDown > borderSize
-	    && yDown < m_uiHeight - borderSize) {
+	    && yDown < (m_uiHeight-1) - borderSize) {
 		return false;
 	}
 
@@ -330,25 +332,33 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 	&& xCurr != INVALID_COORD
 	&& yCurr != INVALID_COORD
 	&& !dragFired) {
-		if (yDown > m_uiHeight - borderSize && yCurr <= m_uiHeight - borderSize) {
+		if (yDown > (m_uiHeight-1) - borderSize
+		&& abs(yDown - yCurr) >= triggerDistance
+		&& abs(yDown - yCurr) * angleFactor > abs(xDown - xCurr)) {
 			//Drag-in from bottom fired
 			handleUpDrag();
 			dragFired = true;
 			return true;
 		}
-		if (yDown < borderSize && yCurr >= borderSize) {
+		if (yDown < borderSize
+		&& abs(yDown - yCurr) >= triggerDistance
+		&& abs(yDown - yCurr) * angleFactor > abs(xDown - xCurr)) {
 			//Drag-in from top fired
 			handleDownDrag();
 			dragFired = true;
 			return true;
 		}
-		if (xDown < borderSize && xCurr >= borderSize) {
+		if (xDown < borderSize
+		&& abs(xDown - xCurr) >= triggerDistance
+		&& abs(xDown - xCurr) * angleFactor > abs(yDown - yCurr)) {
 			//Drag-in from left fired
 			handleSideDrag(true);
 			dragFired = true;
 			return true;
 		}
-		if (xDown > m_uiWidth - borderSize && xCurr <= m_uiWidth - borderSize) {
+		if (xDown > (m_uiWidth-1) - borderSize
+		&& abs(xDown - xCurr) >= triggerDistance
+		&& abs(xDown - xCurr) * angleFactor > abs(yDown - yCurr)) {
 			//Drag-in from right fired
 			handleSideDrag(false);
 			dragFired = true;
