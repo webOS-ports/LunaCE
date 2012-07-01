@@ -252,12 +252,14 @@ bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 
 bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 {
-	//FIXME: Gestures are still triggered if xCurr strays into the 'accepted zone' regardless of distance. Cutoff?
 	//FIXME: Drag event propagates to card view, sometimes causes erroneous upswipes
 	//TODO: Outswipes
 
 	const int borderSize = 25;
-	int triggerDistance = 25;
+	int triggerDistance = 15;
+	int triggerDistanceK = kFlickMinimumYLengthWithKeyboardUp;
+	int cutoffDistance = borderSize + (triggerDistance * 2);
+	int cutoffDistanceK = borderSize + (triggerDistanceK * 2);
 	const qreal angleFactor = 0.8;
 	static bool dragFired = false;
 
@@ -277,7 +279,7 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 		return false;
 	}
 
-	//Transform coordinates to match the screen orientation
+	//Transform touch coordinates to match the screen orientation
 	switch (WindowServer::instance()->getUiOrientation())
 	{
 		case OrientationEvent::Orientation_Up: //Speakers Down
@@ -316,10 +318,6 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 			return false;
 	}
 
-	// enforce a larger minimum Y distance for the drag gesture when the keyboard is up
-	if(IMEController::instance()->isIMEOpened())
-		triggerDistance = kFlickMinimumYLengthWithKeyboardUp;
-
 	if (xDown > borderSize
 	    && xDown < (m_uiWidth-1) - borderSize
 	    && yDown > borderSize
@@ -333,8 +331,19 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 	&& yCurr != INVALID_COORD
 	&& !dragFired) {
 		if (yDown > (m_uiHeight-1) - borderSize
-		&& abs(yDown - yCurr) >= triggerDistance
 		&& abs(yDown - yCurr) * angleFactor > abs(xDown - xCurr)) {
+			if(IMEController::instance()->isIMEOpened()) {
+				if (abs(yDown - yCurr) < triggerDistanceK
+				|| abs(yDown - yCurr) >= cutoffDistanceK) {
+					return false;
+				}
+			}
+			else {
+				if (abs(yDown - yCurr) < triggerDistance
+				|| abs(yDown - yCurr) >= cutoffDistance) {
+					return false;
+				}
+			}
 			//Drag-in from bottom fired
 			handleUpDrag();
 			dragFired = true;
@@ -342,6 +351,7 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 		}
 		if (yDown < borderSize
 		&& abs(yDown - yCurr) >= triggerDistance
+		&& abs(yDown - yCurr) < cutoffDistance
 		&& abs(yDown - yCurr) * angleFactor > abs(xDown - xCurr)) {
 			//Drag-in from top fired
 			handleDownDrag();
@@ -350,6 +360,7 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 		}
 		if (xDown < borderSize
 		&& abs(xDown - xCurr) >= triggerDistance
+		&& abs(xDown - xCurr) < cutoffDistance
 		&& abs(xDown - xCurr) * angleFactor > abs(yDown - yCurr)) {
 			//Drag-in from left fired
 			handleSideDrag(true);
@@ -358,6 +369,7 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 		}
 		if (xDown > (m_uiWidth-1) - borderSize
 		&& abs(xDown - xCurr) >= triggerDistance
+		&& abs(xDown - xCurr) < cutoffDistance
 		&& abs(xDown - xCurr) * angleFactor > abs(yDown - yCurr)) {
 			//Drag-in from right fired
 			handleSideDrag(false);
