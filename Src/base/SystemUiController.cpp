@@ -247,6 +247,54 @@ bool SystemUiController::handleEvent(QEvent *event)
 
 bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 {
+	if(event->type() == QEvent::MouseButtonPress)
+	{
+		const int borderSize = 25;
+		const int INVALID_COORD = 0xFFFFFFFF;
+		int xDown = INVALID_COORD;
+		int yDown = INVALID_COORD;
+
+		xDown = event->pos().x();
+		yDown = event->pos().y();
+
+		//Transform touch coordinates to match the screen orientation
+		switch (WindowServer::instance()->getUiOrientation())
+		{
+			case OrientationEvent::Orientation_Up: //Speakers Down
+				//Do nothing
+				break;
+			case OrientationEvent::Orientation_Down: //Speakers Up
+				xDown = (m_uiWidth-1) - xDown;
+				yDown = (m_uiHeight-1) - yDown;
+				break;
+			case OrientationEvent::Orientation_Left: //Speakers Right
+			{
+				int temp = (m_uiHeight-1) - xDown;
+				xDown = yDown;
+				yDown = temp;
+				break;
+			}
+			case OrientationEvent::Orientation_Right: //Speakers Left
+			{
+				int temp = xDown;
+				xDown = (m_uiWidth-1) - yDown;
+				yDown = temp;
+				break;
+			}
+			default:
+				g_warning("Unknown UI orientation");
+				return false;
+		}
+
+		//Eat mousedown events on the gesture border
+		if (xDown <= borderSize
+		    || xDown >= (m_uiWidth-1) - borderSize
+		    || yDown <= borderSize
+		    || yDown >= (m_uiHeight-1) - borderSize) {
+			return true;
+		}
+	}
+
 	return false;
 }
 
