@@ -63,7 +63,7 @@ static const char* kSystemUiAppId = "com.palm.systemui";
 static const unsigned int s_statusBarLauncherColor = 0x4f545AFF;
 static const unsigned int s_statusBarJustTypeColor = 0x4f545AFF;
 
-static const int kGestureBorderSize = 30;
+static const int kGestureBorderSize = 15;
 static const int kGestureTriggerDistance = 15;
 static const int kGestureTriggerDistanceWithKeyboardUp = 60;
 static const int INVALID_COORD = 0xFFFFFFFF;
