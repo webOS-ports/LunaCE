@@ -63,7 +63,10 @@ static const char* kSystemUiAppId = "com.palm.systemui";
 static const unsigned int s_statusBarLauncherColor = 0x4f545AFF;
 static const unsigned int s_statusBarJustTypeColor = 0x4f545AFF;
 
-static const int kFlickMinimumYLengthWithKeyboardUp = 60;
+static const int kGestureBorderSize = 30;
+static const int kGestureTriggerDistance = 15;
+static const int kGestureTriggerDistanceWithKeyboardUp = 60;
+static const int INVALID_COORD = 0xFFFFFFFF;
 
 SystemUiController* SystemUiController::instance()
 {
@@ -249,8 +252,6 @@ bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 {
 	if(event->type() == QEvent::MouseButtonPress)
 	{
-		const int borderSize = 25;
-		const int INVALID_COORD = 0xFFFFFFFF;
 		int xDown = INVALID_COORD;
 		int yDown = INVALID_COORD;
 
@@ -287,12 +288,9 @@ bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 		}
 
 		//Eat mousedown events on the gesture border
-		if (xDown <= borderSize
-		    || xDown >= (m_uiWidth-1) - borderSize
-		    || yDown <= borderSize
-		    || yDown >= (m_uiHeight-1) - borderSize) {
-			return true;
-		}
+		if (xDown <= kGestureBorderSize && yDown > m_statusBarPtr->boundingRect().height()) return true;
+		if (xDown >= (m_uiWidth-1) - kGestureBorderSize && yDown > m_statusBarPtr->boundingRect().height()) return true;
+		if (yDown >= (m_uiHeight-1) - kGestureBorderSize) return true;
 	}
 
 	return false;
@@ -300,18 +298,21 @@ bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 
 bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 {
-	//FIXME: Drag event propagates to card view, sometimes causes erroneous upswipes
 	//TODO: Outswipes?
+	int triggerDistance;
+	int cutoffDistance;
+	if(IMEController::instance()->isIMEOpened()) {
+		triggerDistance = kGestureTriggerDistanceWithKeyboardUp;
+		cutoffDistance = kGestureBorderSize + (kGestureTriggerDistanceWithKeyboardUp * 2);
+	}
+	else {
+		triggerDistance = kGestureTriggerDistance;
+		cutoffDistance = kGestureBorderSize + (kGestureTriggerDistance * 2);
+	}
 
-	const int borderSize = 25;
-	int triggerDistance = 15;
-	int triggerDistanceK = kFlickMinimumYLengthWithKeyboardUp;
-	int cutoffDistance = borderSize + (triggerDistance * 2);
-	int cutoffDistanceK = borderSize + (triggerDistanceK * 2);
 	const qreal angleFactor = 0.8;
 	static bool dragFired = false;
 
-	const int INVALID_COORD = 0xFFFFFFFF;
 	int xDown = INVALID_COORD;
 	int yDown = INVALID_COORD;
 	int xCurr = INVALID_COORD;
@@ -326,6 +327,8 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 		dragFired = false;
 		return false;
 	}
+
+	if (dragFired) return false;
 
 	//Transform touch coordinates to match the screen orientation
 	switch (WindowServer::instance()->getUiOrientation())
@@ -366,38 +369,30 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 			return false;
 	}
 
-	if (xDown > borderSize
-	    && xDown < (m_uiWidth-1) - borderSize
-	    && yDown > borderSize
-	    && yDown < (m_uiHeight-1) - borderSize) {
+	if (xDown > kGestureBorderSize
+	    && xDown < (m_uiWidth-1) - kGestureBorderSize
+	    && yDown < (m_uiHeight-1) - kGestureBorderSize) {
 		return false;
 	}
+
+	if ((xDown <= kGestureBorderSize || xDown >= (m_uiWidth-1) - kGestureBorderSize)
+	&& yDown <= m_statusBarPtr->boundingRect().height())
+		return true;
 
 	if (xDown != INVALID_COORD
 	&& yDown != INVALID_COORD
 	&& xCurr != INVALID_COORD
-	&& yCurr != INVALID_COORD
-	&& !dragFired) {
-		if (yDown > (m_uiHeight-1) - borderSize
+	&& yCurr != INVALID_COORD) {
+		if (yDown > (m_uiHeight-1) - kGestureBorderSize
+		&& abs(yDown - yCurr) >= triggerDistance
+		&& abs(yDown - yCurr) < cutoffDistance
 		&& abs(yDown - yCurr) * angleFactor > abs(xDown - xCurr)) {
-			if(IMEController::instance()->isIMEOpened()) {
-				if (abs(yDown - yCurr) < triggerDistanceK
-				|| abs(yDown - yCurr) >= cutoffDistanceK) {
-					return false;
-				}
-			}
-			else {
-				if (abs(yDown - yCurr) < triggerDistance
-				|| abs(yDown - yCurr) >= cutoffDistance) {
-					return false;
-				}
-			}
 			//Drag-in from bottom fired
 			handleUpDrag();
 			dragFired = true;
 			return true;
 		}
-		if (xDown < borderSize
+		if (xDown < kGestureBorderSize
 		&& abs(xDown - xCurr) >= triggerDistance
 		&& abs(xDown - xCurr) < cutoffDistance
 		&& abs(xDown - xCurr) * angleFactor > abs(yDown - yCurr)) {
@@ -406,7 +401,7 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 			dragFired = true;
 			return true;
 		}
-		if (xDown > (m_uiWidth-1) - borderSize
+		if (xDown > (m_uiWidth-1) - kGestureBorderSize
 		&& abs(xDown - xCurr) >= triggerDistance
 		&& abs(xDown - xCurr) < cutoffDistance
 		&& abs(xDown - xCurr) * angleFactor > abs(yDown - yCurr)) {
