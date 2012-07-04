@@ -1,4 +1,4 @@
-﻿/* @@@LICENSE
+/* @@@LICENSE
 *
 *      Copyright (c) 2008-2012 Hewlett-Packard Development Company, L.P.
 *
