@@ -518,24 +518,48 @@ void DashboardWindowContainer::layoutAllWindowsInMenu()
 	if(!m_isMenu)
 		return;
 
-	int y = 0, delta = 0;
+	int y = 0;
 
 	y = boundingRect().y();
-	y += sDashboardWindowHeight / 2;
+	if(m_items[m_items.count() - 1]->isDoubleHeightDash())
+		y += sDashboardWindowHeight;
+	else
+		y += sDashboardWindowHeight / 2;
 
+	internalLayoutWindowsInMenu(y);
+}
+
+// TODO: as much as functions similar to this are used, we could break this down to 
+// something like:
+// getNextYOffset(index, direction)
+// which would then return the next Y offset to go to in the up(phone) or down(tablet) direction, and
+// could then be used in all the different functions that do things similar to this, but
+// call different functions on the results
+void DashboardWindowContainer::internalLayoutWindowsInMenu(int startingY)
+{
+	int y = startingY;
 	// Layout all items, excluding deleted items
 	for (int i = m_items.count() - 1; i >= 0; i--) {
 		if (!m_pendingDeleteItems.contains(m_items[i])) {
 			m_items[i]->setPos(m_items[i]->boundingRect().width()/2, y);
 			y += sDashboardWindowHeight + m_menuSeparatorHeight;
+
+			// if the currently being drawn dash is double, add half a dashboard height
 			if(m_items[i]->isDoubleHeightDash())
-				y += sDashboardWindowHeight;
+				y += (sDashboardWindowHeight / 2);
+
+			// if the next one being drawn is double, add half a dashboard height
+			for(int j = i - 1; j >= 0; j--) {
+				if(m_items[j]->isDoubleHeightDash() && !m_pendingDeleteItems.contains(m_items[j])) {
+					y += (sDashboardWindowHeight / 2);
+					j = -1; // if i remember my break rules correctly, can't break here in C .. sigh.
+				}
+			}
 		}
 	}
 }
 
-
-
+// TODO: if this Luna were to run on phones, we need to verify that this works with double height dashes
 void DashboardWindowContainer::setScrollBottom(int newBottom)
 {
 	if(m_isMenu)
@@ -544,7 +568,10 @@ void DashboardWindowContainer::setScrollBottom(int newBottom)
 	m_scrollBottom = newBottom;
 	int y = boundingRect().y() + m_viewportHeight;
 
-	y -= sDashboardWindowHeight / 2;
+	if(m_items[m_items.count() - 1]->isDoubleHeightDash())
+		y -= sDashboardWindowHeight;
+	else
+		y -= sDashboardWindowHeight / 2;
 	y -= m_scrollBottom;
 
 	// Layout all items, excluding deleted items
@@ -593,7 +620,10 @@ void DashboardWindowContainer::addWindow(DashboardWindow* win)
 		win->resizeEventSync(SystemUiController::instance()->currentUiWidth(), sDashboardWindowHeight);
 	}
 	else {
-		win->resizeEventSync(m_contentWidth, sDashboardWindowHeight);
+		if(win->isDoubleHeightDash())
+			win->resizeEventSync(m_contentWidth, sDashboardWindowHeight * 2);
+		else
+			win->resizeEventSync(m_contentWidth, sDashboardWindowHeight);
 	}
 
 	update();
@@ -619,7 +649,10 @@ void DashboardWindowContainer::addWindow(DashboardWindow* win)
 	if(!m_isMenu) {
 		win->setPos(0, m_scrollBottom + sDashboardWindowHeight);
 	} else {
-		win->setPos(win->boundingRect().width()/2, m_scrollBottom - sDashboardWindowHeight);
+		if(win->isDoubleHeightDash())
+			win->setPos(win->boundingRect().width() / 2, m_scrollBottom - (sDashboardWindowHeight * 2));
+		else
+			win->setPos(win->boundingRect().width()/2, m_scrollBottom - sDashboardWindowHeight);
 	}
 
 	restoreNonDeletedItems(false);
@@ -810,6 +843,7 @@ void DashboardWindowContainer::slotProcessAnimationComplete()
 }
 
 // Will be called ONLY by the phone version [not the tablet version]
+// TODO: if this Luna ever runs on phones, verify that this works with double height dashes
 void DashboardWindowContainer::animateWindowsToFinalDestination(int yCoOrd)
 {
 	// Cannot be called when not running as a phone
@@ -856,7 +890,10 @@ void DashboardWindowContainer::animateWindowsToFinalDestinationInMenu(int topCoo
 
 	// Initialize the starting position
 	int y = topCoord;
-	y += sDashboardWindowHeight / 2;
+	if(m_items[m_items.count() - 1]->isDoubleHeightDash())
+		y += sDashboardWindowHeight;
+	else
+		y += sDashboardWindowHeight / 2;
 
 	DashboardWindow* w;
 
@@ -870,8 +907,17 @@ void DashboardWindowContainer::animateWindowsToFinalDestinationInMenu(int topCoo
 		a->setEasingCurve(AS_CURVE(dashboardSnapCurve));
 		a->setDuration(AS(dashboardSnapDuration));
 		m_anim.addAnimation(a);
+
 		if(w->isDoubleHeightDash())
-			y += sDashboardWindowHeight;
+			y += (sDashboardWindowHeight / 2);
+
+		for(int j = i - 1; j >= 0; j--) {
+			if(m_items[j]->isDoubleHeightDash() && !m_pendingDeleteItems.contains(m_items[j])) {
+				y += (sDashboardWindowHeight / 2);
+				j = -1;
+			}
+		}
+
 		y += sDashboardWindowHeight + m_menuSeparatorHeight;
 	}
 
@@ -891,6 +937,9 @@ void DashboardWindowContainer::setWindowsToFinalDestinationInMenu(int topCoord)
 
 	// Initialize the starting position
 	int y = topCoord;
+	if(m_items[m_items.count() - 1]->isDoubleHeightDash())
+		y += sDashboardWindowHeight;
+
 	y += sDashboardWindowHeight / 2;
 
 	DashboardWindow* w;
@@ -901,8 +950,17 @@ void DashboardWindowContainer::setWindowsToFinalDestinationInMenu(int topCoord)
 			continue;
 
 		w->setPos(QPointF(w->boundingRect().width()/2, y));
+
 		if(w->isDoubleHeightDash())
-			y += sDashboardWindowHeight;
+			y += sDashboardWindowHeight / 2;
+
+		for(int j = i - 1; j >= 0; j--) {
+			if(m_items[j]->isDoubleHeightDash() && !m_pendingDeleteItems.contains(m_items[j])) {
+				y += (sDashboardWindowHeight / 2);
+				j = -1;
+			}
+		}
+
 		y += sDashboardWindowHeight + m_menuSeparatorHeight;
 	}
 }

@@ -53,6 +53,8 @@ public:
 	virtual ~DashboardWindowContainer();
 
 	void layoutAllWindowsInMenu();
+	void internalLayoutWindowsInMenu(int startingY);
+
 	void setScrollBottom(int newBottom);
 	void addWindow(DashboardWindow* win);
 	void removeWindow(DashboardWindow* win);

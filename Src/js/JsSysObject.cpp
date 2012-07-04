@@ -2054,6 +2054,11 @@ bool JsSysObject::methodSetWindowProperties(const NPVariant* args, uint32_t argC
             props.setDashboardManualDragMode(0 == mode.compare("manual"));
         }
 
+		fieldId = m_browserFuncs->getstringidentifier("doubleheightdash");
+		if(m_browserFuncs->getproperty(m_npp, obj, fieldId, &fieldValue) && NPVARIANT_IS_BOOLEAN (fieldValue)) {
+			props.setDoubleHeightDash(NPVARIANT_TO_BOOLEAN (fieldValue));
+		}
+
         fieldId = m_browserFuncs->getstringidentifier("statusBarColor");
         if (m_browserFuncs->getproperty (m_npp, obj, fieldId, &fieldValue) && NPVARIANT_IS_INT32 (fieldValue)) {
             props.setStatusBarColor(NPVARIANT_TO_INT32 (fieldValue));

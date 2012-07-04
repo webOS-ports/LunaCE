@@ -239,6 +239,7 @@ struct WindowProperties {
 		, allowResizeOnPositiveSpaceChange(true)
 		, gyroEnabled(false)
 		, compassEnabled(false)
+		, doubleHeightDash(false)
 	{
 	}
 
@@ -260,7 +261,7 @@ struct WindowProperties {
 	void setAllowResizeOnPositiveSpaceChange(bool allow) { flags |= isSetAllowResizeOnPositiveSpaceChange; allowResizeOnPositiveSpaceChange = allow; }
 	void setAllowGyroEvents(bool allow) { flags |= isSetGyro; gyroEnabled = allow; }
 	void setCompassEvents(bool enable) { flags |= isSetEnableCompassEvents; compassEnabled = enable; }
-	void setDoubleHeightDash(bool isDouble) { flags |= isDoubleHeight; doubleHeightDash = true; }
+	void setDoubleHeightDash(bool isDouble) { flags |= isDoubleHeight; doubleHeightDash = isDouble; }
 };
 
 #endif /* WINDOW_H */
