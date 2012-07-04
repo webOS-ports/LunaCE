@@ -50,7 +50,7 @@
 #define BLUETOOTH_PREFS_APP_ID  "com.palm.app.bluetooth"
 #define VPN_PREFS_APP_ID   "com.palm.app.vpn"
 
-#define MINIMUM_BRIGHTNESS  10
+#define MINIMUM_BRIGHTNESS  1
 
 static const int kDateTimerInterval = 30000; // Tick every 30 seconds
 
