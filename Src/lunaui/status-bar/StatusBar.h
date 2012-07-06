@@ -38,6 +38,7 @@
 
 class StatusBarClock;
 class StatusBarBattery;
+class StatusBarSearch;
 class StatusBarTitle;
 class StatusBarServicesConnector;
 class StatusBarInfo;
@@ -196,6 +197,7 @@ private:
 	StatusBar::IndexRSSI1x  m_rssi1xIndex;
 
 	StatusBarClock*            m_clock;
+	StatusBarSearch*           m_search;
 	StatusBarBattery*          m_battery;
 	StatusBarTitle*            m_title;
 	StatusBarInfo*             m_infoItems;

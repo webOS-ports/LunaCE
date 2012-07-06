@@ -24,6 +24,7 @@
 #include "Preferences.h"
 #include "SystemService.h"
 #include "StatusBarTitle.h"
+#include "StatusBarSearch.h"
 #include "StatusBarClock.h"
 #include "StatusBarBattery.h"
 #include "StatusBarInfo.h"
@@ -83,6 +84,9 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 		if(m_type == TypeDockMode)
 			clockPadding = 5;
 
+		// Search icon
+		m_search = new StatusBarSearch(clockPadding);
+		
 		// Text for clock
 		m_clock = new StatusBarClock(clockPadding);
 
@@ -103,6 +107,10 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 			else 
 				m_systemUiGroup->addItem(m_clock);
 		}
+			
+		if(m_search)
+			m_search->setParentItem(this);
+			
 		m_systemUiGroup->addItem(m_battery);
 		m_systemUiGroup->addItem(m_infoItems);
 
@@ -146,6 +154,9 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 	} else {
 		if(m_clock)
 			m_clock->setParentItem(this);
+			
+		if(m_search)
+			m_search->setParentItem(this);
 
 		if(m_type == TypeNormal || m_type == TypeDockMode) {
 			m_systemUiGroup = new StatusBarItemGroup(height, false, false, StatusBarItemGroup::AlignRight);
@@ -191,6 +202,9 @@ StatusBar::~StatusBar()
 
 	if (m_clock)
 		delete m_clock;
+
+	if (m_search)
+		delete m_search;
 
 	if (m_title)
 		delete m_title;
@@ -400,6 +414,10 @@ void StatusBar::layout()
 		if(m_systemUiGroup)
 			m_systemUiGroup->setPos(m_bounds.width()/2, 0);
 
+		// This item is Right Aligned (The position  of the icon is the position of the RIGHT EDGE of the bounding rect)
+		if(m_type != TypeLockScreen && m_search)
+			m_search->setPos(0, 0);
+
 		if(m_type == TypeLockScreen && m_clock)
 			m_clock->setPos (0, 0);
 
@@ -437,6 +455,10 @@ void StatusBar::layout()
 			if(m_infoItems)
 				m_infoItems->setPos (m_bounds.width()/2 - m_battery->width(), 0); // position here is of the right edge of the info item
 		}
+
+		//Fix this- overlaps clock
+		if(m_search)
+			m_search->setPos (0, 0);
 
 		if(m_clock)
 			m_clock->setPos (0, 0);
