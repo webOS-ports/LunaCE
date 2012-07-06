@@ -21,7 +21,7 @@ TODO:
 	Make it launch Just Type
 	Correct Alignment
 	Add Icon
-	Fix crash when closing emu card
+	Fix crash when closing emu card after rotation
 */
 
 
