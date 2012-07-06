@@ -34,7 +34,7 @@
 #define TEXT_BASELINE_OFFSET            (-2)
 #define DEMO_MODE_TIME "12:00"
 
-StatusBarClock::StatusBarClock(unsigned int padding)
+StatusBarSearch::StatusBarSearch(unsigned int padding)
 	: m_clockTimer(new QTimer(this))
 	, m_font(0)
 	, m_twelveHour(true)
@@ -69,19 +69,19 @@ StatusBarClock::StatusBarClock(unsigned int padding)
     	setTimeText(QString(DEMO_MODE_TIME));
 }
 
-StatusBarClock::~StatusBarClock()
+StatusBarSearch::~StatusBarSearch()
 {
 	m_clockTimer->stop();
 	delete m_clockTimer;
 	delete m_font;
 }
 
-QRectF StatusBarClock::boundingRect() const
+QRectF StatusBarSearch::boundingRect() const
 {
 	return m_bounds;
 }
 
-void StatusBarClock::setPadding( unsigned int padding)
+void StatusBarSearch::setPadding( unsigned int padding)
 {
 	m_textPadding = padding;
 
@@ -89,7 +89,7 @@ void StatusBarClock::setPadding( unsigned int padding)
 	setDisplayDate(m_displayDate);
 }
 
-void StatusBarClock::setDisplayDate(bool date)
+void StatusBarSearch::setDisplayDate(bool date)
 {
 	m_displayDate = date;
 
@@ -112,7 +112,7 @@ void StatusBarClock::setDisplayDate(bool date)
 	tick();
 }
 
-void StatusBarClock::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
+void StatusBarSearch::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
 	QPen oldPen = painter->pen();
 
@@ -133,7 +133,7 @@ void StatusBarClock::paint(QPainter* painter, const QStyleOptionGraphicsItem* op
 
 }
 
-void StatusBarClock::setTimeText(const char *time, bool doUpdate)
+void StatusBarSearch::setTimeText(const char *time, bool doUpdate)
 {
 	if(G_LIKELY(!Settings::LunaSettings()->demoMode))
 		setTimeText(QString(time));
@@ -141,7 +141,7 @@ void StatusBarClock::setTimeText(const char *time, bool doUpdate)
 		setTimeText(QString(DEMO_MODE_TIME));
 }
 
-void StatusBarClock::setTimeText(const QString& time, bool doUpdate)
+void StatusBarSearch::setTimeText(const QString& time, bool doUpdate)
 {
 	QFontMetrics fontMetrics(*m_font);
 
@@ -154,12 +154,12 @@ void StatusBarClock::setTimeText(const QString& time, bool doUpdate)
 	}
 }
 
-void StatusBarClock::slotSystemTimeChanged()
+void StatusBarSearch::slotSystemTimeChanged()
 {
 	tick();
 }
 
-void StatusBarClock::tick()
+void StatusBarSearch::tick()
 {
 	if(Settings::LunaSettings()->demoMode)
 		return;
@@ -211,7 +211,7 @@ void StatusBarClock::tick()
 	update();
 }
 
-void StatusBarClock::updateTimeFormat(const char* format)
+void StatusBarSearch::updateTimeFormat(const char* format)
 {
 	m_twelveHour = (strcmp(format, "HH12") == 0);
 	::memset(&m_lastUpdateTime, 0, sizeof(m_lastUpdateTime));

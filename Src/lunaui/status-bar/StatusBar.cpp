@@ -16,7 +16,13 @@
 *
 * LICENSE@@@ */
 
-
+/* STATUS BAR SEARCH MOD
+TODO:
+	Make it launch Just Type
+	Correct Alignment
+	Add Icon
+	Fix crash when closing emu card
+*/
 
 
 #include "StatusBar.h"
@@ -67,6 +73,7 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 	, m_systemUiGroup(0)
 	, m_titleGroup(0)
 	, m_notifGroup(0)
+	, m_searchGroup(0)
 	, m_forceOpaque(false)
 	, m_platformHasPhoneRadio(false)
 {
@@ -108,11 +115,16 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 				m_systemUiGroup->addItem(m_clock);
 		}
 			
-		if(m_search)
-			m_search->setParentItem(this);
-			
 		m_systemUiGroup->addItem(m_battery);
 		m_systemUiGroup->addItem(m_infoItems);
+		
+		m_searchGroup = new StatusBarItemGroup(height, (m_type == TypeNormal || m_type == TypeDockMode), (m_type == TypeNormal || m_type == TypeDockMode), StatusBarItemGroup::AlignRight);
+		connect(m_searchGroup, SIGNAL(signalBoundingRectChanged()), this, SLOT(slotChildBoundingRectChanged()));
+		connect(m_searchGroup, SIGNAL(signalActivated(StatusBarItemGroup*)), this, SLOT(slotMenuGroupActivated(StatusBarItemGroup*)));
+		m_searchGroup->setParentItem(this);
+			
+		if(m_search)
+			m_searchGroup->addItem(m_search);
 
 		m_titleGroup = new StatusBarItemGroup(height, (m_type == TypeNormal || m_type == TypeDockMode), (m_type == TypeNormal || m_type == TypeDockMode), StatusBarItemGroup::AlignLeft);
 		connect(m_titleGroup, SIGNAL(signalBoundingRectChanged()), this, SLOT(slotChildBoundingRectChanged()));
@@ -150,13 +162,13 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 
 			m_notifGroup->setActionable(true);
 			connect(m_notifGroup, SIGNAL(signalActionTriggered(bool)), this, SLOT(slotNotificationMenuAction(bool)));
+
+			m_searchGroup->setActionable(true);
+			connect(m_systemUiGroup, SIGNAL(signalActionTriggered(bool)), this, SLOT(slotSystemMenuMenuAction(bool)));
 		}
 	} else {
 		if(m_clock)
 			m_clock->setParentItem(this);
-			
-		if(m_search)
-			m_search->setParentItem(this);
 
 		if(m_type == TypeNormal || m_type == TypeDockMode) {
 			m_systemUiGroup = new StatusBarItemGroup(height, false, false, StatusBarItemGroup::AlignRight);
@@ -168,6 +180,14 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 					m_systemUiGroup->addItem(m_battery);
 				if(m_infoItems)
 					m_systemUiGroup->addItem(m_infoItems);
+			}
+			m_searchGroup = new StatusBarItemGroup(height, false, false, StatusBarItemGroup::AlignRight);
+			if(m_searchGroup) {
+				m_searchGroup->setParentItem(this);
+				connect(m_searchGroup, SIGNAL(signalActionTriggered(bool)), this, SLOT(slotSystemMenuMenuAction(bool)));
+				m_searchGroup->setActionable(true);
+				if(m_battery)
+					m_searchGroup->addItem(m_search);
 			}
 		}
 		if (m_type == TypeNormal || m_type == TypeDockMode || m_type == TypeEmulatedCard || m_type == TypeFirstUse) {
@@ -184,6 +204,8 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 				m_battery->setParentItem(this);
 			if(m_title)
 				m_title->setParentItem(this);
+			if(m_search)
+				m_search->setParentItem(this);
 			if(m_infoItems)
 				m_infoItems->setParentItem(this);
 		}
@@ -203,14 +225,17 @@ StatusBar::~StatusBar()
 	if (m_clock)
 		delete m_clock;
 
-	if (m_search)
-		delete m_search;
-
 	if (m_title)
 		delete m_title;
 
 	if (m_infoItems)
 		delete m_infoItems;
+
+	if(m_searchGroup)
+		delete m_searchGroup;
+
+	if (m_search)
+		delete m_search;
 
 	if(m_systemUiGroup)
 		delete m_systemUiGroup;
@@ -414,10 +439,6 @@ void StatusBar::layout()
 		if(m_systemUiGroup)
 			m_systemUiGroup->setPos(m_bounds.width()/2, 0);
 
-		// This item is Right Aligned (The position  of the icon is the position of the RIGHT EDGE of the bounding rect)
-		if(m_type != TypeLockScreen && m_search)
-			m_search->setPos(0, 0);
-
 		if(m_type == TypeLockScreen && m_clock)
 			m_clock->setPos (0, 0);
 
@@ -435,12 +456,28 @@ void StatusBar::layout()
 
 			Q_EMIT signalDashboardAreaRightEdgeOffset(offset);
 		}
+		
+		if(m_searchGroup) {
+			int offset = 0;
+
+			if(m_systemUiGroup)
+				offset += m_systemUiGroup->boundingRect().width();
+
+			if(m_notifGroup)
+				offset += m_notifGroup->boundingRect().width();
+
+			m_searchGroup->setPos(m_bounds.width()/2 - offset, 0);
+		}
 	} else {
 		// static layout (for Phone UI)
 		if(m_type == TypeNormal || m_type == TypeEmulatedCard || m_type == TypeFirstUse) {
 			// This item is Left Aligned (The position  of the icon is the position of the LEFT EDGE of the bounding rect)
 			if(m_titleGroup)
 				m_titleGroup->setPos(-m_bounds.width()/2, 0);
+
+			// This item is Right Aligned (The position  of the icon is the position of the RIGHT EDGE of the bounding rect)
+			if(m_searchGroup)
+				m_searchGroup->setPos(m_bounds.width()/2, 0);
 
 			// This item is Right Aligned (The position  of the icon is the position of the RIGHT EDGE of the bounding rect)
 			if(m_systemUiGroup)
@@ -455,10 +492,6 @@ void StatusBar::layout()
 			if(m_infoItems)
 				m_infoItems->setPos (m_bounds.width()/2 - m_battery->width(), 0); // position here is of the right edge of the info item
 		}
-
-		//Fix this- overlaps clock
-		if(m_search)
-			m_search->setPos (0, 0);
 
 		if(m_clock)
 			m_clock->setPos (0, 0);
@@ -483,6 +516,9 @@ void StatusBar::resize(int w, int h)
 
 	if(m_notifGroup)
 		m_notifGroup->setHeight(h);
+
+	if(m_searchGroup)
+		m_searchGroup->setHeight(h);
 
 	layout();
 }
@@ -777,6 +813,8 @@ void StatusBar::slotMenuGroupActivated(StatusBarItemGroup* group)
 		m_titleGroup->actionTriggered();
 	if(m_notifGroup && (m_notifGroup != group) && (m_notifGroup->isActivated()))
 		m_notifGroup->actionTriggered();
+	if(m_searchGroup && (m_searchGroup != group) && (m_searchGroup->isActivated()))
+		m_searchGroup->actionTriggered();
 }
 
 void StatusBar::slotDockModeStatusChanged(bool enabled)

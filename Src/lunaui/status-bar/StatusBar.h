@@ -206,6 +206,7 @@ private:
 	StatusBarItemGroup* m_systemUiGroup;
 	StatusBarItemGroup* m_titleGroup;
 	StatusBarItemGroup* m_notifGroup;
+	StatusBarItemGroup* m_searchGroup;
 
 	StatusBarServicesConnector* m_svcConnector;
 

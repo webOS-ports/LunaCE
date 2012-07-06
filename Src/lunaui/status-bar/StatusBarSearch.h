@@ -26,14 +26,14 @@
 #include <QGraphicsObject>
 #include <QTextLayout>
 
-class StatusBarClock : public StatusBarItem
+class StatusBarSearch : public StatusBarItem
 {
 	Q_OBJECT
 
 public:
 
-	StatusBarClock(unsigned int padding = 0);
-	virtual ~StatusBarClock();
+	StatusBarSearch(unsigned int padding = 0);
+	virtual ~StatusBarSearch();
 
 	QRectF boundingRect() const;
 	void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
