@@ -23,62 +23,28 @@
 #define STATUSBARSEARCH_H
 
 #include "StatusBarItem.h"
+#include <cjson/json.h>
+
 #include <QGraphicsObject>
-#include <QTextLayout>
 
 class StatusBarSearch : public StatusBarItem
 {
 	Q_OBJECT
 
 public:
-
-	StatusBarSearch(unsigned int padding = 0);
-	virtual ~StatusBarSearch();
-
-	QRectF boundingRect() const;
-	void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
-
-	void updateTimeFormat(const char* format);
-
-	void setDisplayDate(bool date);
+	StatusBarSearch();
+	~StatusBarSearch();
 
 	int width() const { return m_bounds.width(); }
 	int height() const { return m_bounds.height(); }
-
-	void setPadding( unsigned int padding);
-
-private Q_SLOTS:
-	void tick();
-	void slotSystemTimeChanged();
+	
+	QRectF boundingRect() const;
+	void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
 
 private:
-	static const int kMaxTimeChars = 10;
-
-	void setTimeText(const char *time, bool doUpdate = true);
-	void setTimeText(const QString& time, bool doUpdate = true);
-
-	QString m_timeText;
-	QRectF m_textRect;
-	QFont* m_font;
-
-	bool m_twelveHour;
-	bool m_displayDate;
-	char m_timeBuf[kMaxTimeChars];
-	char* m_curTimeStr;
-	unsigned int m_textPadding;
-
-	struct {
-		int year;
-		int month;
-		int day;
-		int hour;
-		int min;
-	} m_lastUpdateTime;
-
-	// TODO: use QBasicTimer instead? (may be more lightweight)
-	QTimer *m_clockTimer;
+	QPixmap m_pixmap;
 };
 
 
 
-#endif /* STATUSBARSEARCH_H */
+#endif /* StatusBarSearch_H */

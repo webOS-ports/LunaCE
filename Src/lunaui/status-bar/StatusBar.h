@@ -39,6 +39,7 @@
 class StatusBarClock;
 class StatusBarBattery;
 class StatusBarSearch;
+class StatusBarSeparator;
 class StatusBarTitle;
 class StatusBarServicesConnector;
 class StatusBarInfo;
@@ -167,6 +168,7 @@ private Q_SLOTS:
 	void slotChildBoundingRectChanged();
 	void slotNotificationArealVisibilityChanged(bool visible);
 	void slotBannerMessageActivated();
+	void slotSearchMenuAction();
 	void slotNotificationMenuAction(bool active);
 	void slotSystemMenuMenuAction(bool active);
 	void slotAppMenuMenuAction(bool active);
@@ -198,6 +200,7 @@ private:
 
 	StatusBarClock*            m_clock;
 	StatusBarSearch*           m_search;
+	StatusBarSeparator*        m_separator;
 	StatusBarBattery*          m_battery;
 	StatusBarTitle*            m_title;
 	StatusBarInfo*             m_infoItems;

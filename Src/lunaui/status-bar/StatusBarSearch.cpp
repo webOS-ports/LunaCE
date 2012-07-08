@@ -20,60 +20,36 @@
 
 
 #include "StatusBarSearch.h"
-#include "StatusBar.h"
 #include "Settings.h"
-#include "Preferences.h"
-#include "Localization.h"
+#include "HostBase.h"
 #include "StatusBarServicesConnector.h"
+#include "SystemUiController.h"
 
 #include <QPainter>
-#include <QTimer>
-#include <QDate>
-#include <glib.h>
 
-#define TEXT_BASELINE_OFFSET            (-2)
-#define DEMO_MODE_TIME "12:00"
-
-StatusBarSearch::StatusBarSearch(unsigned int padding)
-	: m_clockTimer(new QTimer(this))
-	, m_font(0)
-	, m_twelveHour(true)
-	, m_displayDate(false)
-	, m_curTimeStr(0)
-	, m_textPadding(padding)
+StatusBarSearch::StatusBarSearch()
 {
-	connect(m_clockTimer, SIGNAL(timeout()), this, SLOT(tick()));
-	m_clockTimer->start(1000);
+	int width, height;
 
-	StatusBarServicesConnector* svcConnector = StatusBarServicesConnector::instance();
-
-	if(svcConnector) {
-		connect(svcConnector,SIGNAL(signalSystemTimeChanged()), this, SLOT(slotSystemTimeChanged()));
-	}
-
-	// Set up text
-	const char* fontName = Settings::LunaSettings()->fontStatusBar.c_str();
-	m_font = new QFont(fontName, 15);
-	m_font->setPixelSize(15);
-
-	if (m_font) {
-		m_font->setBold(true);
-	}
-
-	::memset(m_timeBuf, 0, sizeof(m_timeBuf));
-	::memset(&m_lastUpdateTime, 0, sizeof(m_lastUpdateTime));
+	Settings* settings = Settings::LunaSettings();
 	
-    setDisplayDate(false); // this will set the correct bounding rect and update the time
+	std::string statusBarImagesPath = settings->lunaSystemResourcesPath + "/launcher3/";
+	
+	std::string imagePath = statusBarImagesPath + "search-button-launcher.png";
+	
+	m_pixmap = QPixmap(imagePath.c_str());
+	
+	width  = 32;
+	height = 32;
 
-    if(Settings::LunaSettings()->demoMode)
-    	setTimeText(QString(DEMO_MODE_TIME));
+	m_bounds = QRectF(-width/2, -height/2, width, height);
+
+	// implicit assumption that the dimensions of the errorPixmap is the same as the others
 }
 
 StatusBarSearch::~StatusBarSearch()
 {
-	m_clockTimer->stop();
-	delete m_clockTimer;
-	delete m_font;
+
 }
 
 QRectF StatusBarSearch::boundingRect() const
@@ -81,141 +57,13 @@ QRectF StatusBarSearch::boundingRect() const
 	return m_bounds;
 }
 
-void StatusBarSearch::setPadding( unsigned int padding)
-{
-	m_textPadding = padding;
-
-	// force re-calculation of the bounding rect
-	setDisplayDate(m_displayDate);
-}
-
-void StatusBarSearch::setDisplayDate(bool date)
-{
-	m_displayDate = date;
-
-	m_clockTimer->stop();
-	// Calculate the max width
-	if(!m_displayDate) {
-		setTimeText("00:00", false);
-		m_clockTimer->start (1000);
-	} else {
-		setTimeText("00/00/00", false);
-		m_clockTimer->start (60000);
-	}
-
-	prepareGeometryChange();
-	m_bounds = QRect(-m_textRect.width()/2 - m_textPadding, -m_textRect.height()/2,
-			         m_textRect.width() + m_textPadding * 2, m_textRect.height());
-	Q_EMIT signalBoundingRectChanged();
-
-	::memset(&m_lastUpdateTime, 0, sizeof(m_lastUpdateTime));
-	tick();
-}
-
 void StatusBarSearch::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
-	QPen oldPen = painter->pen();
-
-	QFont origFont = painter->font();
-	painter->setFont(*m_font);
-
-	QFontMetrics fontMetrics(*m_font);
-
-	int baseLine = m_textRect.height()/2 - fontMetrics.descent() + TEXT_BASELINE_OFFSET;
-
-	// paint the text
-	painter->setPen(QColor(0xFF, 0xFF, 0xFF, 0xFF));
-
-	painter->drawText(QPointF(-m_textRect.width()/2, baseLine), m_timeText);
-
-	painter->setPen(oldPen);
-	painter->setFont(origFont);
-
-}
-
-void StatusBarSearch::setTimeText(const char *time, bool doUpdate)
-{
-	if(G_LIKELY(!Settings::LunaSettings()->demoMode))
-		setTimeText(QString(time));
-	else
-		setTimeText(QString(DEMO_MODE_TIME));
-}
-
-void StatusBarSearch::setTimeText(const QString& time, bool doUpdate)
-{
-	QFontMetrics fontMetrics(*m_font);
-
-	m_timeText = time;
-
-	m_textRect = fontMetrics.boundingRect(m_timeText);
-
-	if (doUpdate) {
-		update();
+	if (!m_pixmap.isNull()) {
+		painter->setRenderHint(QPainter::SmoothPixmapTransform);
+		painter->scale(0.9,0.9);
+		painter->drawPixmap(m_bounds.x() + (m_bounds.width() - m_pixmap.width())/2.0,
+							m_bounds.y() + (m_bounds.height() - m_pixmap.height())/2.0,
+							m_pixmap);
 	}
 }
-
-void StatusBarSearch::slotSystemTimeChanged()
-{
-	tick();
-}
-
-void StatusBarSearch::tick()
-{
-	if(Settings::LunaSettings()->demoMode)
-		return;
-
-	time_t rawTime;
-	struct tm* timeinfo = 0;
-
-	::time(&rawTime);
-	timeinfo = ::localtime(&rawTime);
-
-	// get current local time (or date)
-	if(!m_displayDate) {
-		// If local time matches we don't need to update anything
-		if (timeinfo->tm_hour == m_lastUpdateTime.hour && timeinfo->tm_min == m_lastUpdateTime.min)
-		{
-			return;
-		}
-
-		m_lastUpdateTime.hour = timeinfo->tm_hour;
-		m_lastUpdateTime.min = timeinfo->tm_min;
-
-		if (m_twelveHour) {
-			::strftime(m_timeBuf, kMaxTimeChars, LOCALIZED("%I:%M").c_str(), timeinfo);
-
-			if (m_timeBuf[0] == '0') {
-				m_curTimeStr = m_timeBuf + 1;
-			} else {
-				m_curTimeStr = m_timeBuf;
-			}
-		} else {
-			::strftime(m_timeBuf, kMaxTimeChars, LOCALIZED("%H:%M").c_str(), timeinfo);
-			m_curTimeStr = m_timeBuf;
-		}
-		setTimeText(m_curTimeStr);
-	} else{
-		// If local time matches we don't need to update anything
-		if (timeinfo->tm_year == m_lastUpdateTime.year && timeinfo->tm_mon == m_lastUpdateTime.month && timeinfo->tm_mday == m_lastUpdateTime.day)
-		{
-			return;
-		}
-
-		m_lastUpdateTime.year  = timeinfo->tm_year;
-		m_lastUpdateTime.month = timeinfo->tm_mon;
-		m_lastUpdateTime.day   = timeinfo->tm_mday;
-
-		setTimeText(QDate::currentDate().toString(Qt::DefaultLocaleShortDate));
-	}
-
-	update();
-}
-
-void StatusBarSearch::updateTimeFormat(const char* format)
-{
-	m_twelveHour = (strcmp(format, "HH12") == 0);
-	::memset(&m_lastUpdateTime, 0, sizeof(m_lastUpdateTime));
-	tick();
-	update();
-}
-
