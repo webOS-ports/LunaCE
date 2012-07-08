@@ -96,11 +96,10 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 		m_clock = new StatusBarClock(clockPadding);
 
 		m_infoItems = new StatusBarInfo(m_type);
-/*
+
 		//Search Icon
 		m_search = new StatusBarSearch();
 		m_separator = new StatusBarSeparator();
-*/
 	}
 	
 	// Title Bar (a value of true on the third arg turns on non-tablet UI)
@@ -123,7 +122,6 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 		m_systemUiGroup->addItem(m_battery);
 		m_systemUiGroup->addItem(m_infoItems);
 
-/*		
 		m_searchGroup = new StatusBarItemGroup(height, true, true, StatusBarItemGroup::AlignRight);
 		connect(m_searchGroup, SIGNAL(signalBoundingRectChanged()), this, SLOT(slotChildBoundingRectChanged()));
 		connect(m_searchGroup, SIGNAL(signalActivated(StatusBarItemGroup*)), this, SLOT(slotMenuGroupActivated(StatusBarItemGroup*)));
@@ -137,7 +135,7 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 			if(m_separator)
 				m_searchGroup->addItem(m_separator);
 		}
-*/			
+
 		m_titleGroup = new StatusBarItemGroup(height, (m_type == TypeNormal || m_type == TypeDockMode), (m_type == TypeNormal || m_type == TypeDockMode), StatusBarItemGroup::AlignLeft);
 		connect(m_titleGroup, SIGNAL(signalBoundingRectChanged()), this, SLOT(slotChildBoundingRectChanged()));
 		connect(m_titleGroup, SIGNAL(signalActivated(StatusBarItemGroup*)), this, SLOT(slotMenuGroupActivated(StatusBarItemGroup*)));
@@ -175,10 +173,10 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 
 			m_notifGroup->setActionable(true);
 			connect(m_notifGroup, SIGNAL(signalActionTriggered(bool)), this, SLOT(slotNotificationMenuAction(bool)));
-/*
+
 			m_searchGroup->setActionable(true);
 			connect(m_searchGroup, SIGNAL(signalActionTriggered(bool)), this, SLOT(slotSearchMenuAction()));
-*/
+
 		}
 	} else { //If we're on a phone or in an emulated card
 		if(m_clock)
@@ -195,7 +193,7 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 				if(m_infoItems)
 					m_systemUiGroup->addItem(m_infoItems);
 			}
-/*
+
 			m_searchGroup = new StatusBarItemGroup(height, false, false, StatusBarItemGroup::AlignLeft);
 			if(m_searchGroup) {
 				m_searchGroup->setParentItem(this);
@@ -204,7 +202,6 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 				if(m_search)
 					m_searchGroup->addItem(m_search);
 			}
-*/
 		}
 		if (m_type == TypeNormal || m_type == TypeDockMode || m_type == TypeEmulatedCard || m_type == TypeFirstUse) { //Phone, Emulated Card, Always
 			m_titleGroup    = new StatusBarItemGroup(height, m_type != TypeEmulatedCard, false, StatusBarItemGroup::AlignLeft);
@@ -220,8 +217,8 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 				m_battery->setParentItem(this);
 			if(m_title)
 				m_title->setParentItem(this);
-//			if(m_search)
-//				m_search->setParentItem(this);
+			if(m_search)
+				m_search->setParentItem(this);
 			if(m_infoItems)
 				m_infoItems->setParentItem(this);
 		}
