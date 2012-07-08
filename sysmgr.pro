@@ -266,6 +266,7 @@ SOURCES = \
 	StatusBarClock.cpp \
 	StatusBarBattery.cpp \
 	StatusBarSearch.cpp \
+	StatusBarSeparator.cpp \
 	StatusBarTitle.cpp \
 	StatusBarServicesConnector.cpp \
 	StatusBarIcon.cpp \
@@ -456,6 +457,7 @@ HEADERS = \
 	StatusBarClock.h \
 	StatusBarBattery.h \
 	StatusBarSearch.h \
+	StatusBarSeparator.h \
 	StatusBarTitle.h \
 	StatusBarServicesConnector.h \
 	StatusBarIcon.h \
