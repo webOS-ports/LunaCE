@@ -480,7 +480,7 @@ void StatusBar::layout()
 				offset += m_systemUiGroup->boundingRect().width();
 
 			if(m_notifGroup)
-				offset += m_notifGroup->boundingRect().width();
+				offset += m_notifGroup->boundingRect().width() -2;
 
 			m_searchGroup->setPos(m_bounds.width()/2 - offset, 0);
 		}
