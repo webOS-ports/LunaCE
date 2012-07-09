@@ -252,6 +252,9 @@ bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 {
 	if(event->type() == QEvent::MouseButtonPress)
 	{
+		//Adhere to 'Enable Advanced Gestures'
+		if (!Preferences::instance()->sysUiEnableNextPrevGestures()) return false;
+		
 		int xDown = INVALID_COORD;
 		int yDown = INVALID_COORD;
 
@@ -298,7 +301,9 @@ bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 
 bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 {
-	//TODO: Outswipes?
+	//Adhere to 'Enable Advanced Gestures'
+	if (!Preferences::instance()->sysUiEnableNextPrevGestures()) return false;
+	
 	int triggerDistance;
 	int cutoffDistance;
 	if(IMEController::instance()->isIMEOpened()) {
