@@ -480,9 +480,15 @@ void StatusBar::layout()
 				offset += m_systemUiGroup->boundingRect().width();
 
 			if(m_notifGroup)
-				offset += m_notifGroup->boundingRect().width() -2;
+				offset += m_notifGroup->boundingRect().width();
 
 			m_searchGroup->setPos(m_bounds.width()/2 - offset, 0);
+
+			if(m_systemUiGroup)
+				offset -= m_systemUiGroup->separatorWidth()/2; // adjust it so it matches with the divider
+
+			if(m_notifGroup)
+				offset -= m_notifGroup->separatorWidth()/2; // adjust it so it matches with the divider
 		}
 	} else {
 		// static layout (for Phone UI)

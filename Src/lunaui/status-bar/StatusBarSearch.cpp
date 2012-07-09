@@ -39,8 +39,8 @@ StatusBarSearch::StatusBarSearch()
 	
 	m_pixmap = QPixmap(imagePath.c_str());
 	
-	width  = 32;
-	height = 32;
+	width  = 28;
+	height = 28;
 
 	m_bounds = QRectF(-width/2, -height/2, width, height);
 
