@@ -306,14 +306,8 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 	
 	int triggerDistance;
 	int cutoffDistance;
-	if(IMEController::instance()->isIMEOpened()) {
-		triggerDistance = kGestureTriggerDistanceWithKeyboardUp;
-		cutoffDistance = kGestureBorderSize + (kGestureTriggerDistanceWithKeyboardUp * 2);
-	}
-	else {
-		triggerDistance = kGestureTriggerDistance;
-		cutoffDistance = kGestureBorderSize + (kGestureTriggerDistance * 2);
-	}
+	if(IMEController::instance()->isIMEOpened()) triggerDistance = kGestureTriggerDistanceWithKeyboardUp;
+	else triggerDistance = kGestureTriggerDistance;
 
 	const qreal angleFactor = 0.8;
 	static bool dragFired = false;
@@ -390,7 +384,6 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 	&& yCurr != INVALID_COORD) {
 		if (yDown > (m_uiHeight-1) - kGestureBorderSize
 		&& abs(yDown - yCurr) >= triggerDistance
-		&& abs(yDown - yCurr) < cutoffDistance
 		&& abs(yDown - yCurr) * angleFactor > abs(xDown - xCurr)) {
 			//Drag-in from bottom fired
 			handleUpDrag();
@@ -399,7 +392,6 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 		}
 		if (xDown < kGestureBorderSize
 		&& abs(xDown - xCurr) >= triggerDistance
-		&& abs(xDown - xCurr) < cutoffDistance
 		&& abs(xDown - xCurr) * angleFactor > abs(yDown - yCurr)) {
 			//Drag-in from left fired
 			handleSideDrag(true);
@@ -408,7 +400,6 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 		}
 		if (xDown > (m_uiWidth-1) - kGestureBorderSize
 		&& abs(xDown - xCurr) >= triggerDistance
-		&& abs(xDown - xCurr) < cutoffDistance
 		&& abs(xDown - xCurr) * angleFactor > abs(yDown - yCurr)) {
 			//Drag-in from right fired
 			handleSideDrag(false);
