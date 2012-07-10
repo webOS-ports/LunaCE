@@ -16,8 +16,7 @@
 *
 * LICENSE@@@ */
 
-
-
+//TODO: Fix focusing with status bar search
 
 #ifndef STATUSBAR_H
 #define STATUSBAR_H
