@@ -121,14 +121,14 @@ StatusBar::StatusBar(StatusBarType type, int width, int height)
 
 		m_systemUiGroup->addItem(m_battery);
 		m_systemUiGroup->addItem(m_infoItems);
-
-		m_searchGroup = new StatusBarItemGroup(height, true, true, StatusBarItemGroup::AlignRight);
-		connect(m_searchGroup, SIGNAL(signalBoundingRectChanged()), this, SLOT(slotChildBoundingRectChanged()));
-		connect(m_searchGroup, SIGNAL(signalActivated(StatusBarItemGroup*)), this, SLOT(slotMenuGroupActivated(StatusBarItemGroup*)));
-		m_searchGroup->setParentItem(this);
 		
 		if(m_type != TypeLockScreen)
 		{
+			m_searchGroup = new StatusBarItemGroup(height, true, true, StatusBarItemGroup::AlignRight);
+			connect(m_searchGroup, SIGNAL(signalBoundingRectChanged()), this, SLOT(slotChildBoundingRectChanged()));
+			connect(m_searchGroup, SIGNAL(signalActivated(StatusBarItemGroup*)), this, SLOT(slotMenuGroupActivated(StatusBarItemGroup*)));
+			m_searchGroup->setParentItem(this);
+		
 			if(m_search)
 				m_searchGroup->addItem(m_search);
 				
@@ -509,6 +509,9 @@ void StatusBar::layout()
 			if(m_systemUiGroup)
 				m_systemUiGroup->setPos(m_bounds.width()/2, 0);
 		} else {
+			if(m_search)
+				m_search->setPos(m_bounds.width() * 2, 0);
+				
 			if(m_battery)
 				m_battery->setPos (m_bounds.width()/2 - m_battery->width()/2, 0);
 
