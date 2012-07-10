@@ -40,6 +40,7 @@
 #include "Window.h"
 #include "CustomEvents.h"
 #include "StatusBar.h"
+#include "ScreenEdgeFlickGesture.h"
 
 class CardWindow;
 class SysMgrKeyEvent;
@@ -404,6 +405,9 @@ private:
 	void setSuspended(bool);
 	void handleUpDrag();
 	void handleSideDrag(bool next);
+	bool handleScreenEdgeFlickGesture(QGesture* gesture);
+	void handleSideFlick(bool next);
+	void handleUpFlick(ScreenEdgeFlickGesture *g);
 
 	Window* m_parentOfModalWindow;
 	Window* m_activeCardWindow;

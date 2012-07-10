@@ -254,6 +254,9 @@ bool SystemUiController::handleMouseEvent(QMouseEvent *event)
 	{
 		//Adhere to 'Enable Advanced Gestures'
 		if (!Preferences::instance()->sysUiEnableNextPrevGestures()) return false;
+	
+		//Adhere to 'Gesture Detection'
+		if (Preferences::instance()->sysUiGestureDetection() != 1) return false;
 		
 		int xDown = INVALID_COORD;
 		int yDown = INVALID_COORD;
@@ -303,6 +306,9 @@ bool SystemUiController::handleTouchEvent(QTouchEvent *event)
 {
 	//Adhere to 'Enable Advanced Gestures'
 	if (!Preferences::instance()->sysUiEnableNextPrevGestures()) return false;
+	
+	//Adhere to 'Gesture Detection'
+	if (Preferences::instance()->sysUiGestureDetection() != 1) return false;
 	
 	int triggerDistance;
 	int cutoffDistance;
@@ -427,10 +433,15 @@ bool SystemUiController::handleGestureEvent (QGestureEvent* event)
 			}
 		}
 	}
-
+	
+	//Adhere to 'Gesture Detection'
+	if (Preferences::instance()->sysUiGestureDetection() != 0) return false;
+		
 	if (!t) {
 		if (Settings::LunaSettings()->uiType != Settings::UI_MINIMAL && !m_emergencyMode) {
-			//Non-tap gesture detection
+			t = event->gesture((Qt::GestureType) SysMgrGestureScreenEdgeFlick);
+			if (t)
+				return handleScreenEdgeFlickGesture(t);
 		}
 	}
 	
@@ -2199,8 +2210,6 @@ std::string SystemUiController::getMenuTitleForMaximizedWindow(Window* win)
 	return name;
 }
 
-
-
 void SystemUiController::handleUpDrag() {
 	if (m_inDockMode) {
 		enterOrExitDockModeUi(false);
@@ -2252,4 +2261,165 @@ void SystemUiController::handleSideDrag(bool next) {
 	}
 
 	Q_EMIT signalChangeCardWindow(next);
+}
+
+
+bool SystemUiController::handleScreenEdgeFlickGesture(QGesture* gesture)
+{
+	ScreenEdgeFlickGesture* g = static_cast<ScreenEdgeFlickGesture*>(gesture);
+	if (g->state() != Qt::GestureFinished)
+		return false;
+
+	/*
+	switch(g->edge()) {
+		case ScreenEdgeFlickGesture::EdgeBottom:
+			g_warning("Flick From Bottom");
+			break;
+		case ScreenEdgeFlickGesture::EdgeTop:
+			g_warning("Flick From Top");
+			break;
+		case ScreenEdgeFlickGesture::EdgeLeft:
+			g_warning("Flick From Left");
+			break;
+		case ScreenEdgeFlickGesture::EdgeRight:
+			g_warning("Flick From Right");
+			break;
+		case ScreenEdgeFlickGesture::EdgeUnknown:
+			g_warning("Flick From Unknown");
+			break;
+	}
+	g_warning("Flick Gesture length: y=%d", g->yDistance());
+	*/
+
+    OrientationEvent::Orientation orientation = WindowServer::instance()->getUiOrientation();
+	// Up = Button Down, Right = Button Right, Left = Button Left, Down = Button Up (also called Forward)
+	// gesture: Right = button side, Left = camera side, Bottom = button-right bottom, Top = button-right Top
+	switch(WindowServer::instance()->getUiOrientation()) {
+		case OrientationEvent::Orientation_Up:
+			//g_warning("Orientation: Up");
+			switch(g->edge()) {
+				case ScreenEdgeFlickGesture::EdgeBottom: // Bottom
+					handleUpFlick(g);
+					return true;
+				case ScreenEdgeFlickGesture::EdgeTop: // Top
+					break;
+				case ScreenEdgeFlickGesture::EdgeLeft: // Left - fall thru to Right
+				case ScreenEdgeFlickGesture::EdgeRight: // Right
+					handleSideFlick(g->edge() != ScreenEdgeFlickGesture::EdgeRight);
+					return true;
+				case ScreenEdgeFlickGesture::EdgeUnknown:
+					break;
+			}
+			break;
+		case OrientationEvent::Orientation_Down: 
+			//g_warning("Orientation: Down");
+			switch(g->edge()) {
+				case ScreenEdgeFlickGesture::EdgeBottom: // Top
+					break;
+				case ScreenEdgeFlickGesture::EdgeTop: // Bottom
+					handleUpFlick(g);
+					return true;
+				case ScreenEdgeFlickGesture::EdgeLeft: // Right - fall thru to Left
+				case ScreenEdgeFlickGesture::EdgeRight: // Left
+					handleSideFlick(g->edge() != ScreenEdgeFlickGesture::EdgeLeft);
+					return true;
+				case ScreenEdgeFlickGesture::EdgeUnknown:
+					break;
+			}
+			break;
+		case OrientationEvent::Orientation_Left: 
+			//g_warning("Orientation: Left");
+			switch(g->edge()) {
+				case ScreenEdgeFlickGesture::EdgeBottom: // Right - fall thru to Left
+				case ScreenEdgeFlickGesture::EdgeTop: // Left
+					handleSideFlick(g->edge() != ScreenEdgeFlickGesture::EdgeBottom);
+					return true;
+				case ScreenEdgeFlickGesture::EdgeLeft: // Bottom
+					handleUpFlick(g);
+					return true;
+				case ScreenEdgeFlickGesture::EdgeRight: // Top
+					break;
+				case ScreenEdgeFlickGesture::EdgeUnknown:
+					break;
+			}
+			break;
+		case OrientationEvent::Orientation_Right: 
+			//g_warning("Orientation: Right");
+			switch(g->edge()) {
+				case ScreenEdgeFlickGesture::EdgeBottom: // Left - fall thru to Right
+				case ScreenEdgeFlickGesture::EdgeTop: // Right
+					handleSideFlick(g->edge() != ScreenEdgeFlickGesture::EdgeTop);
+					return true;
+				case ScreenEdgeFlickGesture::EdgeLeft: // Top
+					break;
+				case ScreenEdgeFlickGesture::EdgeRight:
+					handleUpFlick(g);
+					return true;
+				case ScreenEdgeFlickGesture::EdgeUnknown:
+					break;
+			}
+			break;
+		default: 
+			g_warning("Unknown UI orientation");
+			return false;
+	}	
+	return false;
+}
+
+void SystemUiController::handleSideFlick(bool next)
+{
+	if (m_dashboardOpened) {
+		g_warning ("%s: %d", __PRETTY_FUNCTION__, __LINE__);
+		Q_EMIT signalCloseDashboard(true);
+	}
+	if (m_menuVisible) {
+		Q_EMIT signalHideMenu();
+	}
+	if (!m_launcherShown) {
+		Q_EMIT signalChangeCardWindow(next);
+	}
+}
+
+void SystemUiController::handleUpFlick(ScreenEdgeFlickGesture *g) {
+	// enforce a larger minimum Y distance for the flick gesture when the keyboard is up
+	if(IMEController::instance()->isIMEOpened()) {
+		if(g->yDistance() < kGestureTriggerDistanceWithKeyboardUp)
+			return; // not long enough, so ignore it
+	}
+
+	if (m_inDockMode) {
+		enterOrExitDockModeUi(false);
+		return;
+	}
+
+	if (m_deviceLocked)
+		return;
+
+	if (m_dashboardOpened) {
+		Q_EMIT signalCloseDashboard(true);
+	}
+
+	if (m_menuVisible) {
+		Q_EMIT signalHideMenu();
+	}
+
+	if (m_universalSearchShown) {
+		Q_EMIT signalHideUniversalSearch(false, false);
+		return;
+	}
+		
+	if (m_launcherShown) {
+		Q_EMIT signalToggleLauncher();
+		return;
+	}
+
+	if ((m_activeCardWindow && m_maximizedCardWindow) || m_cardWindowAboutToMaximize) {
+		if (false == m_modalCardWindowActive)
+			Q_EMIT signalShowDock();
+		
+		Q_EMIT signalMinimizeActiveCardWindow();
+		return;
+	}
+
+	Q_EMIT signalToggleLauncher();					
 }
