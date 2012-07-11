@@ -1,6 +1,7 @@
 /* @@@LICENSE
 *
 *      Copyright (c) 2010-2012 Hewlett-Packard Development Company, L.P.
+*                    2012 Måns Andersson <mail@mansandersson.se>
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -16,12 +17,14 @@
 *
 * LICENSE@@@ */
 
-#ifndef KEYBOARD_FR_AZERTY_H
-#define KEYBOARD_FR_AZERTY_H
+#ifndef KEYBOARD_FR_H
+#define KEYBOARD_FR_H
 #include "../TabletKeymap.h"
 #include "common_keys.h"
+static TabletKeymap::LayoutFamily sLayoutFrench("French", "fr");
+static TabletKeymap::constUKeyArray sFrench_DotCom_Extended = { cKey_DotCom, cKey_DotFr, cKey_DotNet, cKey_DotOrg, cKey_DotEdu, cKey_None };
 
-static TabletKeymap::constUKeyArray sFrAzerty_DotCom_Extended = { cKey_DotCom, cKey_DotFr, cKey_DotNet, cKey_DotOrg, cKey_DotEdu, cKey_None };
+// Azerty
 static TabletKeymap::constUKeyArray sFrAzert1_extended = { Qt::Key_1, Qt::Key_Ampersand, UKey(0x00B9) /* SUPERSCRIPT ONE ¹ */, UKey(0x00BC) /* VULGAR FRACTION ONE QUARTER ¼ */, UKey(0x00BD) /* VULGAR FRACTION ONE HALF ½ */, cKey_None };
 static TabletKeymap::constUKeyArray sFrAzert2_extended = { Qt::Key_2, Qt::Key_Eacute, UKey(0x00B2) /* SUPERSCRIPT TWO ² */, cKey_None };
 static TabletKeymap::constUKeyArray sFrAzert3_extended = { Qt::Key_3, Qt::Key_QuoteDbl, UKey(0x00B3) /* SUPERSCRIPT THREE ³ */, UKey(0x00BE) /* VULGAR FRACTION THREE QUARTERS ¾ */,
@@ -75,12 +78,12 @@ static TabletKeymap::constUKeyArray sExclamAsterisk_extended = { Qt::Key_Exclam,
 										{ w, Qt::Key_L,				Qt::Key_diaeresis,							sL_extended },\
 										{ w, Qt::Key_M,				Qt::Key_AsciiCircum,						sM_extended }
 
-#define FR_AZERTY_LOW_9(w)				{ w, Qt::Key_W,				cKey_Emoticon_Smile,						NULL  },\
-										{ w, Qt::Key_X,				cKey_Emoticon_Wink,							sOptions },\
-										{ w, Qt::Key_C,				cKey_Emoticon_Frown,						sC_extended },\
-										{ w, Qt::Key_V,				cKey_Emoticon_Cry,							NULL },\
-										{ w, Qt::Key_B,				cKey_Emoticon_Yuck,							sToggleLanguage_extended },\
-										{ w, Qt::Key_N,				cKey_Emoticon_Gasp,							sN_extended },\
+#define FR_AZERTY_LOW_9(w)				{ w, Qt::Key_W,				Qt::Key_Up,									NULL  },\
+										{ w, Qt::Key_X,				Qt::Key_Down,								sOptions },\
+										{ w, Qt::Key_C,				Qt::Key_Left,								sC_extended },\
+										{ w, Qt::Key_V,				Qt::Key_Right,								NULL },\
+										{ w, Qt::Key_B,				cKey_Emoticon_Smile,						sToggleLanguage_extended },\
+										{ w, Qt::Key_N,				cKey_Emoticon_Frown,						sN_extended },\
 										{ w, Qt::Key_Comma,			Qt::Key_Question,							sCommaQuestion_extended },\
 										{ w, Qt::Key_Period,		Qt::Key_Semicolon,							sPeriodSemicolon_extended },\
 										{ w, Qt::Key_Colon,			Qt::Key_Slash,								sColonSlash_extended }
@@ -103,7 +106,7 @@ static TabletKeymap::constUKeyArray sExclamAsterisk_extended = { Qt::Key_Exclam,
 									NOKEY_1,\
 									KEY_1(1, Qt::Key_Slash),\
 									KEY_1(SPACE_SIZE - 2, Qt::Key_Space),\
-									KEY_3(1, cKey_DotCom, cKey_DotCom, sFrAzerty_DotCom_Extended),\
+									KEY_3(1, cKey_DotCom, cKey_DotCom, sFrench_DotCom_Extended),\
 									{ 1, Qt::Key_At,			Qt::Key_Underscore,							sAtUnderscore_extended },\
 									{ 1, Qt::Key_Exclam,		Qt::Key_Asterisk,							sExclamAsterisk_extended },\
 									{ 1.5, cKey_Hide,			cKey_Hide,									sHide_extended },\
@@ -115,7 +118,7 @@ static TabletKeymap::constUKeyArray sExclamAsterisk_extended = { Qt::Key_Exclam,
 									NOKEY_1,\
 									NOKEY_1,\
 									KEY_1(SPACE_SIZE - 1, Qt::Key_Space),\
-									KEY_3(1, cKey_DotCom, cKey_DotCom, sFrAzerty_DotCom_Extended),\
+									KEY_3(1, cKey_DotCom, cKey_DotCom, sFrench_DotCom_Extended),\
 									{ 1, Qt::Key_At,			Qt::Key_Underscore,							sAtUnderscore_extended },\
 									{ 1, Qt::Key_Exclam,		Qt::Key_Asterisk,							sExclamAsterisk_extended },\
 									{ 1.5, cKey_Hide,			cKey_Hide,									sHide_extended },\
@@ -133,7 +136,7 @@ static TabletKeymap::LayoutRow sFrAzertyBottomRow_default = { FR_AZERTY_BOTTOM_D
 static TabletKeymap::LayoutRow sFrAzertyBottomRow_url = { FR_AZERTY_BOTTOM_URL };
 static TabletKeymap::LayoutRow sFrAzertyBottomRow_email = { FR_AZERTY_BOTTOM_EMAIL };
 
-static TabletKeymap::LayoutFamily sFrAzertyFamily("fr azerty", "fr", IME_KBD_LANG_French, IME_KBD_SEC_REGQwerty,
+static TabletKeymap::Keymap sFrAzertyFamily(&sLayoutFrench, "Azerty", IME_KBD_LANG_French, IME_KBD_SEC_REGQwerty,
                                                 "+ = [  ]" /* Spaces are "Unicode Character 'HAIR SPACE' (U+200A) ' ' " */, "A z y" /* Spaces are "Unicode Character 'HAIR SPACE' (U+200A) ' ' " */,
                                                 0, 1, 11, 2, true, sFrAzerty, sFrAzertyBottomRow_default, sFrAzertyBottomRow_url, sFrAzertyBottomRow_email);
-#endif // KEYBOARD_FR_AZERTY_H
+#endif // KEYBOARD_FR_H
