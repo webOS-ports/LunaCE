@@ -61,6 +61,7 @@ public:
 
 	bool sysUiNoHomeButtonMode() const { return m_sysUiNoHomeButtonMode; }
 	bool sysUiEnableNextPrevGestures() const { return m_sysUiEnableNextPrevGestures; }
+	int sysUiGestureDetection() const { return m_sysUiGestureDetection; }
 
 	bool imeEnabled() const { return m_imeEnabled; }
 	bool pinyinEnabled() const { return m_pinyinEnabled; }
@@ -133,6 +134,7 @@ private:
 
 	bool m_sysUiNoHomeButtonMode;
 	bool m_sysUiEnableNextPrevGestures;
+	int m_sysUiGestureDetection; //0 - Edge/Swipe, 1 - Edge/Drag, 2 - Area/Swipe, 3 - Area/Drag
 
 	bool m_imeEnabled;
 	bool m_pinyinEnabled;

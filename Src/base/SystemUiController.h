@@ -40,6 +40,7 @@
 #include "Window.h"
 #include "CustomEvents.h"
 #include "StatusBar.h"
+#include "ScreenEdgeFlickGesture.h"
 
 class CardWindow;
 class SysMgrKeyEvent;
@@ -64,6 +65,7 @@ public:
     bool handleEvent(QEvent *event);
     bool handleKeyEvent(QKeyEvent *event);
     bool handleMouseEvent(QMouseEvent *event);
+    bool handleTouchEvent(QTouchEvent *event);
     bool handleGestureEvent(QGestureEvent *event);
     bool handleCustomEvent(QEvent *event);
 
@@ -401,7 +403,11 @@ private:
 	void animValueChanged(const QVariant& value);
 	bool allowSuspend();
 	void setSuspended(bool);
-	void handleScreenEdgeFlickGesture(QGesture* gesture);
+	void handleUpDrag();
+	void handleSideDrag(bool next);
+	bool handleScreenEdgeFlickGesture(QGesture* gesture);
+	void handleSideFlick(bool next);
+	void handleUpFlick(ScreenEdgeFlickGesture *g);
 
 	Window* m_parentOfModalWindow;
 	Window* m_activeCardWindow;
