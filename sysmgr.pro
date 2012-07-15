@@ -45,8 +45,10 @@ ENV_BUILD_TYPE = $$(BUILD_TYPE)
 # Prevent conflict with usage of "signal" in other libraries
 CONFIG += no_keywords
 
-#CONFIG += link_pkgconfig
-#PKGCONFIG = glib-2.0 gthread-2.0
+# We don't have .pc files for most things, rely on being passed
+# the needed include/library search paths
+# CONFIG += link_pkgconfig
+# PKGCONFIG = glib-2.0 gthread-2.0
 
 QT = core gui declarative
 
