@@ -165,20 +165,26 @@ std::string ProcessManager::launch(const std::string& appDescString, const std::
 		else if (winTypeStr == "dockModeWindow") // $$$ FIX THIS, it is just a patch to test Dock mode apps for now
 			winType = Window::Type_DockModeWindow;
 		else {
+#ifdef MACHINE_TOPAZ
 			winType = Window::Type_Emulated_Card;
 
 			if (desc->uiRevision() == 2) {
+#endif
 				winType = Window::Type_Card;
+#ifdef MACHINE_TOPAZ
 			}
+#endif
 		}
 	}
 	
+#ifdef MACHINE_TOPAZ
 	if (winType == Window::Type_Card) {
 		if (desc->uiRevision() != 2) {
 			winType = Window::Type_Emulated_Card;
 		}
 
 	}
+#endif
 		
 	// Get a list of all apps
 	typedef std::list<const ProcessBase*> ProcessList;	
