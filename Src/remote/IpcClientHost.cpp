@@ -291,6 +291,11 @@ void IpcClientHost::onSetWindowProperties(int key, const std::string& winPropsSt
 		winProps.setDashboardManualDragMode(json_object_get_boolean(label));
 	}
 
+	label = json_object_object_get(json, "doubleheightdash");
+	if(label && json_object_is_type(label, json_type_boolean)) {
+		winProps.setDoubleHeightDash(json_object_get_boolean(label));
+	}
+
 	label = json_object_object_get(json, "statusBarColor");
 	if (label && json_object_is_type(label, json_type_int))
 		winProps.setStatusBarColor(json_object_get_int(label));

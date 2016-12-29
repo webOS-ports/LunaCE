@@ -60,6 +60,7 @@ DashboardWebApp::~DashboardWebApp()
 
 void DashboardWebApp::attach(WebPage* page)
 {
+	WindowProperties prop;
 	WindowedWebApp::attach(page);
 
 	const StringVariantMap& stageArgs = page->stageArguments();
@@ -102,9 +103,24 @@ void DashboardWebApp::attach(WebPage* page)
 
 		QVariant v = it->second;
 		if (v.type() == QVariant::String && v.toString() == "manual") {
-			WindowProperties prop;
 			prop.setDashboardManualDragMode(true);
-			setWindowProperties(prop);
 		}
 	}
+
+	it = stageArgs.find("doubleheightdash");
+	if (it != stageArgs.end()) {
+		QVariant v = it->second;
+		if(v.type() == QVariant::Bool) {
+			if(v.toBool()) {
+				prop.setDoubleHeightDash(true);
+				m_windowHeight = kDashboardWindowHeight * 2;
+			} else if(v.type() == QVariant::String && stringIsTrue(v.toString().toStdString())) {
+				prop.setDoubleHeightDash(true);
+				m_windowHeight = kDashboardWindowHeight * 2;
+			} else {
+				prop.setDoubleHeightDash(false);
+			}
+		}
+	}
+	setWindowProperties(prop);
 }

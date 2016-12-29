@@ -453,8 +453,11 @@ void SoundPlayer::checkForNextStep()
 		{
 			setState(eState_Connecting);
 			startTimer();
+// Running media::MediaClient::createLunaMediaPlayer() on webOS 2 causes the media indexer to crash LunaSysMgr out!
+#ifdef MACHINE_TOPAZ
 			m_player = media::MediaClient::createLunaMediaPlayer(*this);
 			m_player->addMediaPlayerChangeListener(m_mediaPlayerChangeListener);
+#endif
 		}
 	}
 	else if (m_state == eState_Connected)

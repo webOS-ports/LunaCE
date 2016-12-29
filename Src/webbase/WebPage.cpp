@@ -1303,11 +1303,15 @@ void WebPage::createAndAttachToApp(ApplicationDescription* appDesc)
 	}
 	else {
 		luna_log(kLogChannel, "Creating Card App");
+#ifdef MACHINE_TOPAZ
 		if (!appDesc || (appDesc->uiRevision() == 2)) {
+#endif
 			winType = Window::Type_Card;
+#ifdef MACHINE_TOPAZ
 		} else {
 			winType = Window::Type_Emulated_Card;
 		}
+#endif
 		m_client = WebAppManager::instance()->launchWithPageInternal(this, winType, appDesc);
 	}
 

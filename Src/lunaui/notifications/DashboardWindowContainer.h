@@ -53,6 +53,8 @@ public:
 	virtual ~DashboardWindowContainer();
 
 	void layoutAllWindowsInMenu();
+	void internalLayoutWindowsInMenu(int startingY);
+
 	void setScrollBottom(int newBottom);
 	void addWindow(DashboardWindow* win);
 	void removeWindow(DashboardWindow* win);
@@ -142,6 +144,7 @@ private Q_SLOTS:
 private:
 
 	void initPixmaps();
+	int calculateDashboardHeight(bool incdel);
 	void calculateScrollProperties();
 	void restoreNonDeletedItems(bool recalcScrollBottom=true);
 	void showOrHideMasks();
